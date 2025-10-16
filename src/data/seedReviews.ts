@@ -1,0 +1,79 @@
+import { Review } from "@/types/review";
+
+export const seedReviews: Review[] = [
+  {
+    id: "rev-001",
+    cafe_name: "Kaffeine Fitzrovia",
+    address: "66 Great Titchfield St, London",
+    noise: "medium",
+    wifi: true,
+    outlets: true,
+    laptop_friendly: true,
+    rush_hours: "12–3pm",
+    ambience: "cozy",
+    overall: 4,
+    notes: "Quiet mornings, best seat by the window near the outlets. Friendly staff. Great for deep work sessions. The flat white is exceptional.",
+    image_url: null,
+    created_at: "2025-10-14T10:00:00Z"
+  },
+  {
+    id: "rev-002",
+    cafe_name: "Workshop Coffee",
+    address: "27 Clerkenwell Rd, London",
+    noise: "quiet",
+    wifi: true,
+    outlets: true,
+    laptop_friendly: true,
+    rush_hours: "8–10am",
+    ambience: "minimal",
+    overall: 5,
+    notes: "Perfect for morning focus sessions. Plenty of power outlets along the walls. The back corner tables are ideal for calls. Wifi is super fast.",
+    image_url: null,
+    created_at: "2025-10-13T14:30:00Z"
+  },
+  {
+    id: "rev-003",
+    cafe_name: "Notes Coffee",
+    address: "31 St Martin's Ln, London",
+    noise: "loud",
+    wifi: true,
+    outlets: false,
+    laptop_friendly: false,
+    rush_hours: "11am–2pm",
+    ambience: "busy",
+    overall: 2,
+    notes: "Gets very busy during lunch. Limited seating and outlets are scarce. Better for quick coffee than working. Music can be loud.",
+    image_url: null,
+    created_at: "2025-10-12T09:15:00Z"
+  },
+  {
+    id: "rev-004",
+    cafe_name: "The Espresso Room",
+    address: "31-35 Great Ormond St, London",
+    noise: "quiet",
+    wifi: true,
+    outlets: true,
+    laptop_friendly: true,
+    rush_hours: "2–4pm",
+    ambience: "bright",
+    overall: 5,
+    notes: "Hidden gem near the hospital. Super quiet, great natural light. The baristas are friendly and don't mind if you stay for hours. Free water refills.",
+    image_url: null,
+    created_at: "2025-10-11T16:45:00Z"
+  },
+  {
+    id: "rev-005",
+    cafe_name: "Ozone Coffee Roasters",
+    address: "11 Leonard St, London",
+    noise: "medium",
+    wifi: true,
+    outlets: true,
+    laptop_friendly: true,
+    rush_hours: "9am–12pm",
+    ambience: "bright",
+    overall: 4,
+    notes: "Spacious with high ceilings. Communal tables work well for collaborative work. Can get a bit echoey when full but manageable with headphones.",
+    image_url: null,
+    created_at: "2025-10-10T11:20:00Z"
+  }
+];

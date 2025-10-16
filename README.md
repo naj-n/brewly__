@@ -1,73 +1,125 @@
-# Welcome to your Lovable project
+# Café Companion - Study Café Review Platform
 
-## Project info
+A beautiful, cozy café review platform focused on helping people find the perfect study and work spots.
 
-**URL**: https://lovable.dev/projects/72b4e5f9-c3b7-4b1e-b878-783df0def5dc
+## Project Overview
 
-## How can I edit this code?
+Café Companion is a feed-first review site that helps users discover cafés ideal for studying and working. The MVP features a clean, responsive interface with warm coffee-shop aesthetics.
 
-There are several ways of editing your application.
+## Current Features (Homepage MVP)
 
-**Use Lovable**
+- **Interactive Feed**: Browse reviews of study-friendly cafés
+- **Smart Search**: Filter cafés by name in real-time
+- **Review Cards**: Quick-view attributes (noise, Wi-Fi, outlets, laptop-friendly, ambience)
+- **Detailed View**: Full review modal with Google Maps integration
+- **Submit Reviews**: Easy-to-use form with validation
+- **Save Cafés**: Save favorites to localStorage (Supabase integration planned)
+- **Responsive Design**: Mobile-first layout with elegant desktop experience
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/72b4e5f9-c3b7-4b1e-b878-783df0def5dc) and start prompting.
+## Design System
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Colors**: Warm café palette with cream backgrounds (#FBF6F0), coffee brown accent (#6B4F3A)
+- **Typography**: Playfair Display for headings, Inter for body text
+- **Style**: Rounded corners (2xl), soft shadows, subtle gradients
 
-**Use your preferred IDE**
+## Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Framework**: React + Vite + TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Routing**: React Router
+- **Storage**: localStorage (temporary - Supabase planned)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Getting Started
 
-Follow these steps:
+```bash
+# Install dependencies
+npm install
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Run development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Placeholder Pages
 
-**Use GitHub Codespaces**
+The following pages are currently placeholders and will be fully implemented in the next development phase:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- **Saved Page** (`SavedPagePlaceholder`): Shows preview of saved cafés
+- **Account Page** (`AccountPagePlaceholder`): User preferences and data export
 
-## What technologies are used for this project?
+## Next Steps
 
-This project is built with:
+### To continue development, run Lovable with this prompt:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+**"Generate full Saved and Account pages for Café Companion"**
 
-## How can I deploy this project?
+This will:
+- Create a complete Saved page with filtering and sorting
+- Build a full Account page with user settings
+- Maintain the current design system and warm aesthetic
 
-Simply open [Lovable](https://lovable.dev/projects/72b4e5f9-c3b7-4b1e-b878-783df0def5dc) and click on Share -> Publish.
+## Future Integrations
 
-## Can I connect a custom domain to my Lovable project?
+### Supabase Integration (Planned)
 
-Yes, you can!
+Currently using localStorage for data persistence. To integrate Supabase:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Enable Lovable Cloud in project settings
+2. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Replace localStorage calls with Supabase queries:
+   - Reviews → `reviews` table
+   - Saved cafés → `saved_cafes` table with user relationships
+   - User authentication for personalized experiences
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Planned Features
+
+- Image upload for café photos
+- User authentication and profiles
+- Social features (like, comment on reviews)
+- Advanced filtering (by attributes, location)
+- Map view of nearby cafés
+- Opening hours tracking
+- Food/service ratings
+
+## Code Structure
+
+```
+src/
+├── components/
+│   ├── NavBar.tsx              # Top navigation with search
+│   ├── ReviewCard.tsx          # Individual review in feed
+│   ├── ReviewModal.tsx         # Detailed review view
+│   ├── SubmitReviewModal.tsx   # Add new review form
+│   ├── StarRating.tsx          # Interactive star rating
+│   ├── Toast.tsx               # Notification component
+│   ├── SavedPagePlaceholder.tsx
+│   └── AccountPagePlaceholder.tsx
+├── data/
+│   └── seedReviews.ts          # Sample review data
+├── types/
+│   └── review.ts               # TypeScript interfaces
+└── pages/
+    └── Index.tsx               # Main homepage
+```
+
+## Accessibility
+
+- Keyboard navigation support
+- ARIA labels and roles
+- Semantic HTML
+- Focus management in modals
+- Screen reader friendly
+
+## Contributing
+
+This is a Lovable-generated project. To make changes:
+1. Use the Lovable editor for AI-assisted development
+2. Or clone and edit locally, then push changes back
+
+## License
+
+Created with [Lovable](https://lovable.dev)
