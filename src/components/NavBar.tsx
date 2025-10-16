@@ -22,7 +22,7 @@ export const NavBar = ({
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <h1 className="font-sail text-2xl font-bold text-primary whitespace-nowrap">
-          BREWLY
+          brewly
         </h1>
 
         {/* Search */}
