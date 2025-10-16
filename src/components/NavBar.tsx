@@ -21,8 +21,8 @@ export const NavBar = ({
     <nav className="sticky top-0 z-40 w-full bg-card border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
-        <h1 className="font-serif text-2xl font-bold text-primary whitespace-nowrap">
-          Café Companion
+        <h1 className="font-sail text-2xl font-bold text-primary whitespace-nowrap">
+          BREWLY
         </h1>
 
         {/* Search */}
@@ -30,7 +30,7 @@ export const NavBar = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             type="search"
-            placeholder="Search café name (optional)"
+            placeholder="Search café name"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
@@ -74,7 +74,7 @@ export const NavBar = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             type="search"
-            placeholder="Search café name (optional)"
+            placeholder="Search café name"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"

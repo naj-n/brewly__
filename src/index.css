@@ -18,11 +18,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 17%;
 
-    --primary: 25 28% 33%;
-    --primary-foreground: 30 33% 98%;
+    --primary: 37 50% 77%;
+    --primary-foreground: 0 0% 17%;
 
     --secondary: 30 30% 80%;
-    --secondary-foreground: 25 28% 33%;
+    --secondary-foreground: 0 0% 17%;
 
     --muted: 30 15% 88%;
     --muted-foreground: 0 0% 42%;
@@ -41,7 +41,8 @@ All colors MUST be HSL.
     
     /* Custom café tokens */
     --gradient-header: linear-gradient(90deg, hsl(30 25% 95%), hsl(30 28% 92%));
-    --shadow-soft: 0 4px 20px -2px hsl(25 28% 33% / 0.08);
+    --gradient-background: linear-gradient(135deg, hsl(30 40% 96%), hsl(25 35% 92%), hsl(20 30% 88%));
+    --shadow-soft: 0 4px 20px -2px hsl(37 50% 77% / 0.15);
 
     --sidebar-background: 0 0% 98%;
 
@@ -70,8 +71,8 @@ All colors MUST be HSL.
     --popover: 25 18% 15%;
     --popover-foreground: 30 33% 98%;
 
-    --primary: 30 33% 98%;
-    --primary-foreground: 25 28% 33%;
+    --primary: 37 50% 77%;
+    --primary-foreground: 25 20% 12%;
 
     --secondary: 25 15% 25%;
     --secondary-foreground: 30 33% 98%;
@@ -105,8 +106,10 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply text-foreground font-sans;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, hsl(30 40% 96%), hsl(25 35% 92%), hsl(20 30% 88%));
+    min-height: 100vh;
   }
   
   h1, h2, h3, h4, h5, h6 {
