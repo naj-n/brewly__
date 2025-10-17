@@ -67,6 +67,7 @@ const Index = () => {
         cafe_name: review.cafe_name,
         address: review.address,
         overall: review.overall,
+        notes: review.notes,
       });
       setToastMessage("Saved");
     }
@@ -82,7 +83,7 @@ const Index = () => {
   };
 
   if (currentPage === 'saved') {
-    return <SavedPagePlaceholder />;
+    return <SavedPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;
   }
 
   if (currentPage === 'account') {

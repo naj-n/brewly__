@@ -19,4 +19,5 @@ export interface SavedCafe {
   cafe_name: string;
   address: string;
   overall: number;
+  notes: string;
 }
