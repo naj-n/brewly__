@@ -90,7 +90,16 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-[hsl(180_50%_88%)] opacity-30 blur-3xl animate-float" style={{ animationDuration: '20s', animationDelay: '0s' }} />
+        <div className="absolute top-40 right-20 w-80 h-80 rounded-full bg-[hsl(120_25%_80%)] opacity-25 blur-3xl animate-float" style={{ animationDuration: '25s', animationDelay: '2s' }} />
+        <div className="absolute bottom-32 left-1/4 w-72 h-72 rounded-full bg-[hsl(10_70%_88%)] opacity-30 blur-3xl animate-float" style={{ animationDuration: '18s', animationDelay: '4s' }} />
+        <div className="absolute bottom-20 right-1/3 w-64 h-64 rounded-full bg-[hsl(30_45%_80%)] opacity-25 blur-3xl animate-float" style={{ animationDuration: '22s', animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 rounded-full bg-[hsl(180_55%_85%)] opacity-20 blur-3xl animate-float" style={{ animationDuration: '30s', animationDelay: '3s' }} />
+      </div>
+
       <NavBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -99,7 +108,7 @@ const Index = () => {
         onNavigateToAccount={() => setCurrentPage('account')}
       />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
