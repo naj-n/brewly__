@@ -41,7 +41,7 @@ All colors MUST be HSL.
     
     /* Custom café tokens */
     --gradient-header: linear-gradient(90deg, hsl(30 25% 95%), hsl(30 28% 92%));
-    --gradient-background: linear-gradient(135deg, hsl(35 45% 94%), hsl(30 40% 90%), hsl(25 35% 86%));
+    --gradient-background: linear-gradient(135deg, hsl(180 40% 94%), hsl(180 38% 89%), hsl(22 64% 87%), hsl(150 14% 96%));
     --shadow-soft: 0 4px 20px -2px hsl(37 50% 77% / 0.15);
 
     --sidebar-background: 0 0% 98%;
@@ -108,7 +108,7 @@ All colors MUST be HSL.
   body {
     @apply text-foreground font-sans;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, hsl(35 45% 94%), hsl(30 40% 90%), hsl(25 35% 86%));
+    background: linear-gradient(135deg, hsl(180 40% 94%), hsl(180 38% 89%), hsl(22 64% 87%), hsl(150 14% 96%));
     min-height: 100vh;
   }
   
