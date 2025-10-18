@@ -1,96 +1,96 @@
-import { User, Download, Settings } from "lucide-react";
+import { User, Lock, Bell, HelpCircle, LogOut, ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const AccountPagePlaceholder = () => {
-  const handleExportSaved = () => {
-    const saved = localStorage.getItem('cafeCompanionSaved');
-    if (saved) {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(saved);
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "cafe-companion-saved.json");
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-  };
+interface AccountPagePlaceholderProps {
+  onNavigateToFeed?: () => void;
+}
+
+export const AccountPagePlaceholder = ({ onNavigateToFeed }: AccountPagePlaceholderProps) => {
+  const menuItems = [
+    { icon: User, label: "Edit Profile", onClick: () => console.log("Edit Profile") },
+    { icon: Lock, label: "Change Password", onClick: () => console.log("Change Password") },
+    { icon: Bell, label: "Notifications", onClick: () => console.log("Notifications") },
+    { icon: HelpCircle, label: "Help / Support", onClick: () => console.log("Help") },
+    { icon: LogOut, label: "Log Out", onClick: () => console.log("Log Out"), danger: true },
+  ];
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="font-serif text-4xl font-bold mb-2">Account</h1>
-          <p className="text-muted-foreground">
-            Manage your preferences and data
-          </p>
-        </div>
-
-        <div className="bg-card border-2 border-dashed border-border rounded-2xl p-8 text-center mb-8">
-          <User size={48} className="mx-auto mb-4 text-muted-foreground" />
-          <h2 className="font-serif text-2xl font-semibold mb-2">Coming Soon</h2>
-          <p className="text-muted-foreground mb-4">
-            The full Account page will be generated in a subsequent run to conserve Lovable credits.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Below is a preview of planned account features:
-          </p>
-        </div>
-
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User size={20} />
-                Username
-              </CardTitle>
-              <CardDescription>Set your display name (coming soon)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Authentication and user profiles will be integrated with Supabase in future updates.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings size={20} />
-                Preferences
-              </CardTitle>
-              <CardDescription>Customize your experience (coming soon)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Settings for notifications, display preferences, and more will be available here.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download size={20} />
-                Export Data
-              </CardTitle>
-              <CardDescription>Download your saved cafés as JSON</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={handleExportSaved} variant="outline" className="w-full sm:w-auto">
-                <Download size={16} className="mr-2" />
-                Export Saved Cafés
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-8 text-center">
-          <Button asChild variant="outline">
-            <a href="/">Back to Feed</a>
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Floating background elements - same as homepage */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-[hsl(195_55%_90%)] opacity-40 blur-[120px] animate-float" style={{ animationDuration: '25s', animationDelay: '0s' }} />
+        <div className="absolute top-0 right-0 w-[550px] h-[650px] rounded-full bg-[hsl(280_45%_88%)] opacity-35 blur-[120px] animate-float" style={{ animationDuration: '30s', animationDelay: '3s' }} />
+        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(345_65%_88%)] opacity-45 blur-[120px] animate-float" style={{ animationDuration: '28s', animationDelay: '5s' }} />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full bg-[hsl(345_60%_90%)] opacity-40 blur-[130px] animate-float" style={{ animationDuration: '32s', animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/3 w-[450px] h-[450px] rounded-full bg-[hsl(40_40%_93%)] opacity-30 blur-[100px] animate-float" style={{ animationDuration: '26s', animationDelay: '4s' }} />
       </div>
+
+      {/* Header */}
+      <nav className="sticky top-0 z-40 w-full bg-card/80 backdrop-blur-sm border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNavigateToFeed}
+            aria-label="Back to feed"
+            className="hover:bg-primary/10"
+          >
+            <ArrowLeft size={20} />
+          </Button>
+          
+          <h1 className="font-sail text-3xl font-bold text-primary">
+            Brewly
+          </h1>
+          
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+      </nav>
+
+      <main className="container mx-auto px-4 py-8 relative z-10">
+        <div className="max-w-2xl mx-auto">
+          {/* Profile Section */}
+          <div className="bg-card rounded-2xl p-8 shadow-lg border border-border mb-6">
+            <div className="flex flex-col items-center text-center">
+              {/* Profile Photo */}
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-4 border-2 border-primary/20">
+                <User size={40} className="text-primary" />
+              </div>
+              
+              {/* Username */}
+              <h2 className="font-serif text-2xl font-semibold text-foreground mb-1">
+                Coffee Lover
+              </h2>
+              
+              {/* Email */}
+              <p className="text-sm text-muted-foreground">
+                coffee.lover@brewly.com
+              </p>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div className="bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
+            {menuItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  onClick={item.onClick}
+                  className={`w-full flex items-center justify-between px-6 py-4 transition-all hover:bg-muted/50 ${
+                    index !== menuItems.length - 1 ? 'border-b border-border' : ''
+                  } ${item.danger ? 'text-destructive hover:bg-destructive/5' : 'text-foreground'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <Icon size={20} className={item.danger ? 'text-destructive' : 'text-muted-foreground'} />
+                    <span className="font-medium">{item.label}</span>
+                  </div>
+                  <ChevronRight size={18} className="text-muted-foreground" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

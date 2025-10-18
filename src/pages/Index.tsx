@@ -87,7 +87,7 @@ const Index = () => {
   }
 
   if (currentPage === 'account') {
-    return <AccountPagePlaceholder />;
+    return <AccountPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;
   }
 
   return (
