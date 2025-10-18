@@ -1,4 +1,4 @@
-import { User, Lock, Bell, HelpCircle, LogOut, ArrowLeft, ChevronRight } from "lucide-react";
+import { User, Lock, Bell, HelpCircle, LogOut, ArrowLeft, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AccountPagePlaceholderProps {
@@ -9,6 +9,7 @@ export const AccountPagePlaceholder = ({ onNavigateToFeed }: AccountPagePlacehol
   const menuItems = [
     { icon: User, label: "Edit Profile", onClick: () => console.log("Edit Profile") },
     { icon: Lock, label: "Change Password", onClick: () => console.log("Change Password") },
+    { icon: FileText, label: "My Reviews", onClick: () => console.log("My Reviews") },
     { icon: Bell, label: "Notifications", onClick: () => console.log("Notifications") },
     { icon: HelpCircle, label: "Help / Support", onClick: () => console.log("Help") },
     { icon: LogOut, label: "Log Out", onClick: () => console.log("Log Out"), danger: true },
