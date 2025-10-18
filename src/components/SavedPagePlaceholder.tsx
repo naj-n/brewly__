@@ -28,11 +28,11 @@ export const SavedPagePlaceholder = ({ onNavigateToFeed }: SavedPagePlaceholderP
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Floating background elements - same as homepage */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-[hsl(200_45%_88%)] opacity-25 blur-3xl animate-float" style={{ animationDuration: '20s', animationDelay: '0s' }} />
-        <div className="absolute top-40 right-20 w-80 h-80 rounded-full bg-[hsl(280_30%_88%)] opacity-20 blur-3xl animate-float" style={{ animationDuration: '25s', animationDelay: '2s' }} />
-        <div className="absolute bottom-32 left-1/4 w-72 h-72 rounded-full bg-[hsl(340_50%_90%)] opacity-30 blur-3xl animate-float" style={{ animationDuration: '18s', animationDelay: '4s' }} />
-        <div className="absolute bottom-20 right-1/3 w-64 h-64 rounded-full bg-[hsl(35_40%_90%)] opacity-25 blur-3xl animate-float" style={{ animationDuration: '22s', animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 rounded-full bg-[hsl(190_40%_88%)] opacity-18 blur-3xl animate-float" style={{ animationDuration: '30s', animationDelay: '3s' }} />
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-[hsl(195_55%_90%)] opacity-40 blur-[120px] animate-float" style={{ animationDuration: '25s', animationDelay: '0s' }} />
+        <div className="absolute top-0 right-0 w-[550px] h-[650px] rounded-full bg-[hsl(280_45%_88%)] opacity-35 blur-[120px] animate-float" style={{ animationDuration: '30s', animationDelay: '3s' }} />
+        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(345_65%_88%)] opacity-45 blur-[120px] animate-float" style={{ animationDuration: '28s', animationDelay: '5s' }} />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full bg-[hsl(345_60%_90%)] opacity-40 blur-[130px] animate-float" style={{ animationDuration: '32s', animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/3 w-[450px] h-[450px] rounded-full bg-[hsl(40_40%_93%)] opacity-30 blur-[100px] animate-float" style={{ animationDuration: '26s', animationDelay: '4s' }} />
       </div>
 
       {/* Header */}
