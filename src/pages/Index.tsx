@@ -20,10 +20,11 @@ import { SubmitReviewModal } from "@/components/SubmitReviewModal";
 import { Toast } from "@/components/Toast";
 import { SavedPagePlaceholder } from "@/components/SavedPagePlaceholder";
 import { AccountPagePlaceholder } from "@/components/AccountPagePlaceholder";
+import { MyReviewsPage } from "@/components/MyReviewsPage";
 import { Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Page = 'feed' | 'saved' | 'account';
+type Page = 'feed' | 'saved' | 'account' | 'my-reviews';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState<Page>('feed');
@@ -86,8 +87,12 @@ const Index = () => {
     return <SavedPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;
   }
 
+  if (currentPage === 'my-reviews') {
+    return <MyReviewsPage onNavigateToFeed={() => setCurrentPage('account')} />;
+  }
+
   if (currentPage === 'account') {
-    return <AccountPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;
+    return <AccountPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} onNavigateToMyReviews={() => setCurrentPage('my-reviews')} />;
   }
 
   return (

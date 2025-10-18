@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 
 interface AccountPagePlaceholderProps {
   onNavigateToFeed?: () => void;
+  onNavigateToMyReviews?: () => void;
 }
 
-export const AccountPagePlaceholder = ({ onNavigateToFeed }: AccountPagePlaceholderProps) => {
+export const AccountPagePlaceholder = ({ onNavigateToFeed, onNavigateToMyReviews }: AccountPagePlaceholderProps) => {
   const menuItems = [
     { icon: User, label: "Edit Profile", onClick: () => console.log("Edit Profile") },
     { icon: Lock, label: "Change Password", onClick: () => console.log("Change Password") },
-    { icon: FileText, label: "My Reviews", onClick: () => console.log("My Reviews") },
+    { icon: FileText, label: "My Reviews", onClick: onNavigateToMyReviews },
     { icon: Bell, label: "Notifications", onClick: () => console.log("Notifications") },
     { icon: HelpCircle, label: "Help / Support", onClick: () => console.log("Help") },
     { icon: LogOut, label: "Log Out", onClick: () => console.log("Log Out"), danger: true },
