@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
-import { Volume2, Wifi, Zap, Laptop, Clock, Sparkles } from "lucide-react";
+import { Volume2, Wifi, Zap, Clock, Sparkles } from "lucide-react";
 
 interface SubmitReviewModalProps {
   isOpen: boolean;
@@ -26,7 +26,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const [noise, setNoise] = useState<NoiseLevel | "">("");
   const [wifi, setWifi] = useState<boolean | null>(null);
   const [outlets, setOutlets] = useState<boolean | null>(null);
-  const [laptopFriendly, setLaptopFriendly] = useState<boolean | null>(null);
   const [rushHours, setRushHours] = useState<RushHours | "">("");
   const [ambience, setAmbience] = useState<Ambience | "">("");
   const [overall, setOverall] = useState(0);
@@ -46,7 +45,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     if (!noise) newErrors.noise = "Please select noise level";
     if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
     if (outlets === null) newErrors.outlets = "Please indicate outlet availability";
-    if (laptopFriendly === null) newErrors.laptopFriendly = "Please indicate if laptop-friendly";
     if (!ambience) newErrors.ambience = "Please select ambience";
     if (overall === 0) newErrors.overall = "Please provide a rating";
 
@@ -68,7 +66,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
       noise: noise as NoiseLevel,
       wifi: wifi!,
       outlets: outlets!,
-      laptop_friendly: laptopFriendly!,
+      laptop_friendly: true,
       rush_hours: rushHours || "Random",
       ambience: ambience as Ambience,
       overall,
@@ -95,7 +93,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     setNoise("");
     setWifi(null);
     setOutlets(null);
-    setLaptopFriendly(null);
     setRushHours("");
     setAmbience("");
     setOverall(0);
@@ -109,7 +106,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">Add a Review</DialogTitle>
           <DialogDescription>
-            Seen a good study café? Share a quick review — 30s tops.
+            Discovered a great spot to focus? Share your thoughts!
           </DialogDescription>
         </DialogHeader>
 
@@ -201,7 +198,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
           </div>
 
           {/* Toggles */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="required">Wi-Fi *</Label>
               <div className="flex gap-2 mt-2">
@@ -252,32 +249,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
                 </button>
               </div>
               {errors.outlets && <p className="text-xs text-destructive mt-1">{errors.outlets}</p>}
-            </div>
-
-            <div>
-              <Label className="required">Laptop OK *</Label>
-              <div className="flex gap-2 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setLaptopFriendly(true)}
-                  className={`flex-1 py-2 px-3 rounded-lg border-2 transition-all ${
-                    laptopFriendly === true ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
-                  }`}
-                >
-                  <Laptop size={14} className="inline mr-1" />
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLaptopFriendly(false)}
-                  className={`flex-1 py-2 px-3 rounded-lg border-2 transition-all ${
-                    laptopFriendly === false ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-              {errors.laptopFriendly && <p className="text-xs text-destructive mt-1">{errors.laptopFriendly}</p>}
             </div>
           </div>
 
