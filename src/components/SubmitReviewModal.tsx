@@ -255,7 +255,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
           {/* Rush Hours */}
           <div>
             <Label htmlFor="rushHours">Rush Hours</Label>
-            <div className="flex gap-2 mt-2 flex-wrap">
+            <div className="grid grid-cols-3 gap-2 mt-2">
               {(['Early morning', 'Morning', 'Afternoon', 'Evening', 'Night', 'Random'] as RushHours[]).map((time) => (
                 <button
                   key={time}
