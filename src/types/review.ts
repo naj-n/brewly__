@@ -1,5 +1,7 @@
 export interface Review {
   id: string;
+  reviewer_name: string;
+  reviewer_email: string;
   cafe_name: string;
   address: string;
   noise: 'quiet' | 'medium' | 'loud';
