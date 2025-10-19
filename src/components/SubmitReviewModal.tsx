@@ -125,8 +125,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
                 id="reviewerName"
                 value={reviewerName}
                 onChange={(e) => setReviewerName(e.target.value)}
-                placeholder="Your name (will be displayed publicly)"
-                className={errors.reviewerName ? "border-destructive" : ""}
+                placeholder="Your name"
+                className={errors.reviewerName ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
               />
               {errors.reviewerName && <p className="text-xs text-destructive mt-1">{errors.reviewerName}</p>}
             </div>
@@ -139,8 +139,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
                 type="email"
                 value={reviewerEmail}
                 onChange={(e) => setReviewerEmail(e.target.value)}
-                placeholder="your.email@gmail.com"
-                className={errors.reviewerEmail ? "border-destructive" : ""}
+                placeholder="Your email"
+                className={errors.reviewerEmail ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Your email will remain anonymous and is only used for verification purposes.
