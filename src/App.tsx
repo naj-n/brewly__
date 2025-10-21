@@ -12,34 +12,32 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
 export default function App() {
   const [refresh, setRefresh] = useState(false); // state to refresh the reviews
 
   return (
-    <div>
-      <h1>Café Companion</h1>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div style={{ padding: "2rem" }}>
+            <h1>Café Companion</h1>
 
-      {/* 1️⃣ Add the form component */}
-      <ReviewForm onSubmitted={() => setRefresh(!refresh)} />
+            {/* ✅ Review form */}
+            <ReviewForm onSubmitted={() => setRefresh(!refresh)} />
 
-      {/* 2️⃣ Add the list component */}
-      <ReviewsList refresh={refresh} />
-    </div>
+            {/* ✅ Review list */}
+            <ReviewsList refresh={refresh} />
+
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
