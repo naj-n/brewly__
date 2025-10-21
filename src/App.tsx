@@ -2,21 +2,6 @@ import { useState } from "react";
 import ReviewForm from "./components/ReviewForm";
 import ReviewsList from "./components/ReviewsList";
 
-export default function App() {
-  const [refresh, setRefresh] = useState(false);
-
-  return (
-    <div>
-      <h1>Café Companion</h1>
-
-      {/* Form for submitting reviews */}
-      <ReviewForm onSubmitted={() => setRefresh(!refresh)} />
-
-      {/* Dynamic display of all reviews */}
-      <ReviewsList refresh={refresh} />
-    </div>
-  );
-}
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
