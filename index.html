@@ -1,4 +1,11 @@
-<!doctype html>
+<!-- Supabase JS library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.14.0/dist/supabase.min.js"></script>
+<script>
+  // Initialize Supabase client
+  const supabaseUrl = 'https://jnkcyebdrxjqkjulbnow.supabase.co';       
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impua2N5ZWJkcnhqcWtqdWxibm93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTg3MzYsImV4cCI6MjA3NjE5NDczNn0.f22KSB668RUvHjj8_l_zA3zRBekV_Yhg7p8JvpP3H4I';  
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+</script><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
