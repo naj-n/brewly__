@@ -6,7 +6,7 @@ export default function App() {
   const [refresh, setRefresh] = useState(false);
 
   return (
-    <div>
+    <div style={{ padding: "2rem" }}>
       <h1>Café Companion</h1>
       <ReviewForm onSubmitted={() => setRefresh(!refresh)} />
       <ReviewsList refresh={refresh} />
