@@ -1,15 +1,27 @@
-import { useState } from "react";
-import ReviewForm from "./components/ReviewForm";
-import ReviewsList from "./components/ReviewsList";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
 
-export default function App() {
-  const [refresh, setRefresh] = useState(false);
+const queryClient = new QueryClient();
 
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Café Companion</h1>
-      <ReviewForm onSubmitted={() => setRefresh(!refresh)} />
-      <ReviewsList refresh={refresh} />
-    </div>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
