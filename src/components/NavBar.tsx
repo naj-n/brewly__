@@ -1,4 +1,4 @@
-import { Search, Plus, Bookmark, User } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -6,16 +6,12 @@ interface NavBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onAddReview: () => void;
-  onNavigateToSaved: () => void;
-  onNavigateToAccount: () => void;
 }
 
 export const NavBar = ({
   searchQuery,
   onSearchChange,
   onAddReview,
-  onNavigateToSaved,
-  onNavigateToAccount,
 }: NavBarProps) => {
   return (
     <nav className="sticky top-0 z-40 w-full bg-card border-b border-border shadow-sm">
@@ -46,24 +42,6 @@ export const NavBar = ({
           </Button>
           <Button onClick={onAddReview} size="icon" className="sm:hidden" aria-label="Add review">
             <Plus size={18} />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onNavigateToSaved}
-            aria-label="Saved cafés"
-          >
-            <Bookmark size={20} />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onNavigateToAccount}
-            aria-label="Account settings"
-          >
-            <User size={20} />
           </Button>
         </div>
       </div>

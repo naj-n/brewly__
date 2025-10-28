@@ -9,7 +9,7 @@ interface ReviewModalProps {
   review: Review | null;
   isOpen: boolean;
   onClose: () => void;
-  onToggleSave: (review: Review) => void;
+  onToggleSave?: (review: Review) => void;
 }
 
 const noiseIcons = {
@@ -44,8 +44,10 @@ export const ReviewModal = ({ review, isOpen, onClose, onToggleSave }: ReviewMod
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(review.address)}`;
 
   const handleSaveClick = () => {
-    setIsSaved(!isSaved);
-    onToggleSave(review);
+    if (onToggleSave) {
+      setIsSaved(!isSaved);
+      onToggleSave(review);
+    }
   };
 
   return (

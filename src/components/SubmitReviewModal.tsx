@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
 import { Volume2, Wifi, Zap, Clock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface SubmitReviewModalProps {
@@ -22,8 +21,9 @@ type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
 
 export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewModalProps) => {
-  const { user } = useAuth();
   const { toast } = useToast();
+  const [reviewerName, setReviewerName] = useState("");
+  const [reviewerEmail, setReviewerEmail] = useState("");
   const [cafeName, setCafeName] = useState("");
   const [address, setAddress] = useState("");
   const [noise, setNoise] = useState<NoiseLevel | "">("");
@@ -39,6 +39,12 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    if (!reviewerName.trim()) newErrors.reviewerName = "Name is required";
+    if (!reviewerEmail.trim()) {
+      newErrors.reviewerEmail = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reviewerEmail.trim())) {
+      newErrors.reviewerEmail = "Please enter a valid email address";
+    }
     if (!cafeName.trim()) newErrors.cafeName = "Café name is required";
     if (!noise) newErrors.noise = "Please select noise level";
     if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
@@ -54,14 +60,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to submit a review.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -97,7 +95,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
       const { data: newReview, error: reviewError } = await supabase
         .from('Reviews Table')
         .insert({
-          user_id: user.id,
+          reviewer_name: reviewerName.trim(),
+          reviewer_email: reviewerEmail.trim(),
           cafe_id: cafeId,
           noise_level: noise,
           wifi: wifi!,
@@ -124,8 +123,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
       // Transform to Review type for UI
       const transformedReview: Review = {
         id: newReview.id,
-        reviewer_name: user.user_metadata?.name || 'Anonymous',
-        reviewer_email: user.email || '',
+        reviewer_name: newReview.reviewer_name || 'Anonymous',
+        reviewer_email: newReview.reviewer_email || '',
         cafe_name: cafeInfo?.name || cafeName.trim(),
         address: cafeInfo?.address || address.trim() || "Address not provided",
         noise: newReview.noise_level as 'quiet' | 'medium' | 'loud',
@@ -159,6 +158,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   };
 
   const resetForm = () => {
+    setReviewerName("");
+    setReviewerEmail("");
     setCafeName("");
     setAddress("");
     setNoise("");
@@ -182,6 +183,44 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+          {/* Reviewer Information Section */}
+          <div className="space-y-4 pb-5 border-b border-border">
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium text-foreground">Your Information</h3>
+              <p className="text-xs text-muted-foreground">Help others trust your review</p>
+            </div>
+            
+            {/* Name */}
+            <div>
+              <Label htmlFor="reviewerName" className="required">Name *</Label>
+              <Input
+                id="reviewerName"
+                value={reviewerName}
+                onChange={(e) => setReviewerName(e.target.value)}
+                placeholder="Your name"
+                className={errors.reviewerName ? "border-destructive" : ""}
+              />
+              {errors.reviewerName && <p className="text-xs text-destructive mt-1">{errors.reviewerName}</p>}
+            </div>
+
+            {/* Email */}
+            <div>
+              <Label htmlFor="reviewerEmail" className="required">Email *</Label>
+              <Input
+                id="reviewerEmail"
+                type="email"
+                value={reviewerEmail}
+                onChange={(e) => setReviewerEmail(e.target.value)}
+                placeholder="your@email.com"
+                className={errors.reviewerEmail ? "border-destructive" : ""}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Your email will remain private and is only used for verification.
+              </p>
+              {errors.reviewerEmail && <p className="text-xs text-destructive mt-1">{errors.reviewerEmail}</p>}
+            </div>
+          </div>
+
           {/* Café Name */}
           <div>
             <Label htmlFor="cafeName" className="required">Café Name *</Label>

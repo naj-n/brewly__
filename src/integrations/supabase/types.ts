@@ -45,6 +45,8 @@ export type Database = {
           notes: string | null
           outlets: string | null
           overall_rating: number
+          reviewer_email: string | null
+          reviewer_name: string | null
           rush_hours: string | null
           user_id: string | null
           wifi: boolean | null
@@ -58,6 +60,8 @@ export type Database = {
           notes?: string | null
           outlets?: string | null
           overall_rating: number
+          reviewer_email?: string | null
+          reviewer_name?: string | null
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
@@ -71,6 +75,8 @@ export type Database = {
           notes?: string | null
           outlets?: string | null
           overall_rating?: number
+          reviewer_email?: string | null
+          reviewer_name?: string | null
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null

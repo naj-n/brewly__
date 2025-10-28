@@ -11,48 +11,29 @@
  */
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Review, SavedCafe } from "@/types/review";
+import { Review } from "@/types/review";
 import { NavBar } from "@/components/NavBar";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewModal } from "@/components/ReviewModal";
 import { SubmitReviewModal } from "@/components/SubmitReviewModal";
-import { Toast } from "@/components/Toast";
-import { SavedPagePlaceholder } from "@/components/SavedPagePlaceholder";
-import { AccountPagePlaceholder } from "@/components/AccountPagePlaceholder";
-import { MyReviewsPage } from "@/components/MyReviewsPage";
 import { Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-
-type Page = 'feed' | 'saved' | 'account' | 'my-reviews';
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState<Page>('feed');
+  const { toast } = useToast();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Redirect to auth if not logged in
+  // Fetch reviews from Supabase on mount
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  // Fetch reviews from Supabase
-  useEffect(() => {
-    if (user) {
-      fetchReviews();
-    }
-  }, [user]);
+    fetchReviews();
+  }, []);
 
   const fetchReviews = async () => {
     try {
@@ -60,8 +41,7 @@ const Index = () => {
         .from('Reviews Table')
         .select(`
           *,
-          cafe:Cafes Table!inner(name, address),
-          user:Users Table!inner(name, email)
+          cafe:Cafes Table!inner(name, address)
         `)
         .order('created_at', { ascending: false });
 
@@ -69,8 +49,8 @@ const Index = () => {
 
       const transformedReviews: Review[] = (reviewsData || []).map((r: any) => ({
         id: r.id,
-        reviewer_name: r.user.name || 'Anonymous',
-        reviewer_email: r.user.email || '',
+        reviewer_name: r.reviewer_name || 'Anonymous',
+        reviewer_email: r.reviewer_email || '',
         cafe_name: r.cafe.name,
         address: r.cafe.address,
         noise: r.noise_level as 'quiet' | 'medium' | 'loud',
@@ -88,6 +68,11 @@ const Index = () => {
       setReviews(transformedReviews);
     } catch (error) {
       console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error loading reviews",
+        description: "Please refresh the page to try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -110,58 +95,19 @@ const Index = () => {
     setIsReviewModalOpen(true);
   };
 
-  const handleToggleSave = (review: Review) => {
-    // TODO: replace localStorage with Supabase
-    const savedItems = localStorage.getItem('cafeCompanionSaved');
-    const saved: SavedCafe[] = savedItems ? JSON.parse(savedItems) : [];
-    
-    const existingIndex = saved.findIndex((item) => item.id === review.id);
-    
-    if (existingIndex > -1) {
-      saved.splice(existingIndex, 1);
-      setToastMessage("Removed from saved");
-    } else {
-      saved.push({
-        id: review.id,
-        cafe_name: review.cafe_name,
-        address: review.address,
-        overall: review.overall,
-        notes: review.notes,
-      });
-      setToastMessage("Saved");
-    }
-    
-    localStorage.setItem('cafeCompanionSaved', JSON.stringify(saved));
-  };
-
   const handleSubmitReview = (newReview: Review) => {
-    // Add to top of feed
+    // Add to top of feed and refetch to ensure sync
     setReviews([newReview, ...reviews]);
     setIsSubmitModalOpen(false);
+    fetchReviews(); // Refetch to get accurate data
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Coffee className="w-12 h-12 text-primary animate-pulse" />
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  if (currentPage === 'saved') {
-    return <SavedPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;
-  }
-
-  if (currentPage === 'my-reviews') {
-    return <MyReviewsPage onNavigateToFeed={() => setCurrentPage('account')} />;
-  }
-
-  if (currentPage === 'account') {
-    return <AccountPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} onNavigateToMyReviews={() => setCurrentPage('my-reviews')} />;
   }
 
   return (
@@ -179,8 +125,6 @@ const Index = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onAddReview={() => setIsSubmitModalOpen(true)}
-        onNavigateToSaved={() => setCurrentPage('saved')}
-        onNavigateToAccount={() => setCurrentPage('account')}
       />
 
       <main className="container mx-auto px-4 py-8 relative z-10">
@@ -203,7 +147,6 @@ const Index = () => {
                   key={review.id}
                   review={review}
                   onCardClick={() => handleCardClick(review)}
-                  onToggleSave={() => handleToggleSave(review)}
                 />
               ))}
             </div>
@@ -230,7 +173,6 @@ const Index = () => {
           setIsReviewModalOpen(false);
           setSelectedReview(null);
         }}
-        onToggleSave={handleToggleSave}
       />
 
       <SubmitReviewModal
@@ -238,14 +180,6 @@ const Index = () => {
         onClose={() => setIsSubmitModalOpen(false)}
         onSubmit={handleSubmitReview}
       />
-
-      {/* Toast */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          onClose={() => setToastMessage(null)}
-        />
-      )}
     </div>
   );
 };
