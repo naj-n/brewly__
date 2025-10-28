@@ -16,22 +16,22 @@ export type Database = {
     Tables: {
       "Cafes Table": {
         Row: {
-          address: string | null
+          address: string
           created_at: string
           id: string
-          name: string | null
+          name: string
         }
         Insert: {
-          address?: string | null
+          address: string
           created_at?: string
           id?: string
-          name?: string | null
+          name: string
         }
         Update: {
-          address?: string | null
+          address?: string
           created_at?: string
           id?: string
-          name?: string | null
+          name?: string
         }
         Relationships: []
       }
@@ -44,7 +44,7 @@ export type Database = {
           noise_level: string | null
           notes: string | null
           outlets: string | null
-          overall_rating: number | null
+          overall_rating: number
           rush_hours: string | null
           user_id: string | null
           wifi: boolean | null
@@ -57,7 +57,7 @@ export type Database = {
           noise_level?: string | null
           notes?: string | null
           outlets?: string | null
-          overall_rating?: number | null
+          overall_rating: number
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
@@ -70,7 +70,7 @@ export type Database = {
           noise_level?: string | null
           notes?: string | null
           outlets?: string | null
-          overall_rating?: number | null
+          overall_rating?: number
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
@@ -95,21 +95,21 @@ export type Database = {
       "Users Table": {
         Row: {
           created_at: string
-          email: string | null
+          email: string
           id: string
-          name: string | null
+          name: string
         }
         Insert: {
           created_at?: string
-          email?: string | null
+          email: string
           id?: string
-          name?: string | null
+          name: string
         }
         Update: {
           created_at?: string
-          email?: string | null
+          email?: string
           id?: string
-          name?: string | null
+          name?: string
         }
         Relationships: []
       }
