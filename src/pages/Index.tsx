@@ -30,9 +30,32 @@ const Index = () => {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch reviews from Supabase on mount
+  // Fetch reviews from Supabase on mount and set up real-time subscription
   useEffect(() => {
     fetchReviews();
+
+    // Set up real-time subscription for new reviews
+    const channel = supabase
+      .channel('reviews-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'Reviews Table'
+        },
+        (payload) => {
+          console.log('New review added:', payload);
+          // Refetch all reviews to get the complete data with cafe info
+          fetchReviews();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchReviews = async () => {
