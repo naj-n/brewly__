@@ -83,6 +83,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "Reviews Table_cafe_id_fkey"
+            columns: ["cafe_id"]
+            isOneToOne: false
+            referencedRelation: "Cafes Table"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "Reviews Table_id_fkey"
             columns: ["id"]
             isOneToOne: true
