@@ -23,7 +23,11 @@ import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { toast } = useToast();
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    // Load from localStorage on initial mount
+    const cached = localStorage.getItem('cafe-reviews');
+    return cached ? JSON.parse(cached) : [];
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -89,6 +93,8 @@ const Index = () => {
       }));
 
       setReviews(transformedReviews);
+      // Save to localStorage
+      localStorage.setItem('cafe-reviews', JSON.stringify(transformedReviews));
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast({
