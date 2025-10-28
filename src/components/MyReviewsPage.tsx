@@ -4,32 +4,118 @@ import { StarRating } from "./StarRating";
 import { ArrowLeft, Edit, MapPin, Volume2, Wifi, Zap, Laptop, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditReviewModal } from "./EditReviewModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface MyReviewsPageProps {
   onNavigateToFeed?: () => void;
 }
 
 export const MyReviewsPage = ({ onNavigateToFeed }: MyReviewsPageProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [myReviews, setMyReviews] = useState<Review[]>([]);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load user's reviews from localStorage
-    const drafts = localStorage.getItem('cafeCompanionDrafts');
-    if (drafts) {
-      setMyReviews(JSON.parse(drafts));
+    if (user) {
+      fetchMyReviews();
     }
-  }, []);
+  }, [user]);
 
-  const handleEditReview = (updatedReview: Review) => {
-    const updatedReviews = myReviews.map(review => 
-      review.id === updatedReview.id ? updatedReview : review
-    );
-    setMyReviews(updatedReviews);
-    localStorage.setItem('cafeCompanionDrafts', JSON.stringify(updatedReviews));
-    setIsEditModalOpen(false);
-    setSelectedReview(null);
+  const fetchMyReviews = async () => {
+    try {
+      const { data: reviewsData, error } = await supabase
+        .from('Reviews Table')
+        .select(`
+          *,
+          cafe:Cafes Table!inner(name, address)
+        `)
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const transformedReviews: Review[] = (reviewsData || []).map((r: any) => ({
+        id: r.id,
+        reviewer_name: user?.user_metadata?.name || 'Anonymous',
+        reviewer_email: user?.email || '',
+        cafe_name: r.cafe.name,
+        address: r.cafe.address,
+        noise: r.noise_level as 'quiet' | 'medium' | 'loud',
+        wifi: r.wifi,
+        outlets: r.outlets === 'Yes',
+        laptop_friendly: true,
+        rush_hours: r.rush_hours || 'Random',
+        ambience: r.ambience as 'cozy' | 'bright' | 'minimal' | 'busy',
+        overall: r.overall_rating,
+        notes: r.notes || '',
+        image_url: null,
+        created_at: r.created_at,
+      }));
+
+      setMyReviews(transformedReviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your reviews.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditReview = async (updatedReview: Review) => {
+    try {
+      // Find the cafe_id for this review
+      const { data: reviewData } = await supabase
+        .from('Reviews Table')
+        .select('cafe_id')
+        .eq('id', updatedReview.id)
+        .single();
+
+      if (!reviewData) throw new Error('Review not found');
+
+      const { error } = await supabase
+        .from('Reviews Table')
+        .update({
+          noise_level: updatedReview.noise,
+          wifi: updatedReview.wifi,
+          outlets: updatedReview.outlets ? 'Yes' : 'No',
+          rush_hours: updatedReview.rush_hours,
+          ambience: updatedReview.ambience,
+          overall_rating: updatedReview.overall,
+          notes: updatedReview.notes,
+        })
+        .eq('id', updatedReview.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setMyReviews(myReviews.map(review => 
+        review.id === updatedReview.id ? updatedReview : review
+      ));
+      
+      setIsEditModalOpen(false);
+      setSelectedReview(null);
+      
+      toast({
+        title: "Review updated!",
+        description: "Your changes have been saved.",
+      });
+    } catch (error: any) {
+      console.error('Error updating review:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update review.",
+        variant: "destructive",
+      });
+    }
   };
 
   const openEditModal = (review: Review) => {
@@ -82,7 +168,12 @@ export const MyReviewsPage = ({ onNavigateToFeed }: MyReviewsPageProps) => {
           </div>
 
           {/* Reviews List */}
-          {myReviews.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <Edit size={64} className="mx-auto mb-4 text-muted-foreground/50 animate-pulse" />
+              <p className="text-muted-foreground">Loading your reviews...</p>
+            </div>
+          ) : myReviews.length > 0 ? (
             <div className="space-y-4">
               {myReviews.map((review) => (
                 <div

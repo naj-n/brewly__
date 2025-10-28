@@ -10,9 +10,9 @@
  * - Add user authentication for personalized saved lists
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Review, SavedCafe } from "@/types/review";
-import { seedReviews } from "@/data/seedReviews";
 import { NavBar } from "@/components/NavBar";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewModal } from "@/components/ReviewModal";
@@ -23,17 +23,75 @@ import { AccountPagePlaceholder } from "@/components/AccountPagePlaceholder";
 import { MyReviewsPage } from "@/components/MyReviewsPage";
 import { Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Page = 'feed' | 'saved' | 'account' | 'my-reviews';
 
 const Index = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<Page>('feed');
-  const [reviews, setReviews] = useState<Review[]>(seedReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Fetch reviews from Supabase
+  useEffect(() => {
+    if (user) {
+      fetchReviews();
+    }
+  }, [user]);
+
+  const fetchReviews = async () => {
+    try {
+      const { data: reviewsData, error } = await supabase
+        .from('Reviews Table')
+        .select(`
+          *,
+          cafe:Cafes Table!inner(name, address),
+          user:Users Table!inner(name, email)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const transformedReviews: Review[] = (reviewsData || []).map((r: any) => ({
+        id: r.id,
+        reviewer_name: r.user.name || 'Anonymous',
+        reviewer_email: r.user.email || '',
+        cafe_name: r.cafe.name,
+        address: r.cafe.address,
+        noise: r.noise_level as 'quiet' | 'medium' | 'loud',
+        wifi: r.wifi,
+        outlets: r.outlets === 'Yes',
+        laptop_friendly: true,
+        rush_hours: r.rush_hours || 'Random',
+        ambience: r.ambience as 'cozy' | 'bright' | 'minimal' | 'busy',
+        overall: r.overall_rating,
+        notes: r.notes || '',
+        image_url: null,
+        created_at: r.created_at,
+      }));
+
+      setReviews(transformedReviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Client-side search filtering
   const filteredReviews = searchQuery.trim()
@@ -80,8 +138,19 @@ const Index = () => {
     // Add to top of feed
     setReviews([newReview, ...reviews]);
     setIsSubmitModalOpen(false);
-    setToastMessage("Thanks — review added to feed (saved locally)");
   };
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Coffee className="w-12 h-12 text-primary animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   if (currentPage === 'saved') {
     return <SavedPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;

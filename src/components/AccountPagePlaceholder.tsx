@@ -1,5 +1,6 @@
 import { User, Lock, Bell, HelpCircle, LogOut, ArrowLeft, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AccountPagePlaceholderProps {
   onNavigateToFeed?: () => void;
@@ -7,13 +8,20 @@ interface AccountPagePlaceholderProps {
 }
 
 export const AccountPagePlaceholder = ({ onNavigateToFeed, onNavigateToMyReviews }: AccountPagePlaceholderProps) => {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    onNavigateToFeed?.();
+  };
+
   const menuItems = [
     { icon: User, label: "Edit Profile", onClick: () => console.log("Edit Profile") },
     { icon: Lock, label: "Change Password", onClick: () => console.log("Change Password") },
     { icon: FileText, label: "My Reviews", onClick: onNavigateToMyReviews },
     { icon: Bell, label: "Notifications", onClick: () => console.log("Notifications") },
     { icon: HelpCircle, label: "Help / Support", onClick: () => console.log("Help") },
-    { icon: LogOut, label: "Log Out", onClick: () => console.log("Log Out"), danger: true },
+    { icon: LogOut, label: "Log Out", onClick: handleSignOut, danger: true },
   ];
 
   return (
@@ -60,12 +68,12 @@ export const AccountPagePlaceholder = ({ onNavigateToFeed, onNavigateToMyReviews
               
               {/* Username */}
               <h2 className="font-serif text-2xl font-semibold text-foreground mb-1">
-                Coffee Lover
+                {user?.user_metadata?.name || 'Coffee Lover'}
               </h2>
               
               {/* Email */}
               <p className="text-sm text-muted-foreground">
-                coffee.lover@brewly.com
+                {user?.email || 'coffee.lover@brewly.com'}
               </p>
             </div>
           </div>

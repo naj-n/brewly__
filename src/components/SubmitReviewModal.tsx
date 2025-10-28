@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
 import { Volume2, Wifi, Zap, Clock, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubmitReviewModalProps {
   isOpen: boolean;
@@ -19,8 +22,8 @@ type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
 
 export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewModalProps) => {
-  const [reviewerName, setReviewerName] = useState("");
-  const [reviewerEmail, setReviewerEmail] = useState("");
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [cafeName, setCafeName] = useState("");
   const [address, setAddress] = useState("");
   const [noise, setNoise] = useState<NoiseLevel | "">("");
@@ -31,16 +34,11 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const [overall, setOverall] = useState(0);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!reviewerName.trim()) newErrors.reviewerName = "Name is required";
-    if (!reviewerEmail.trim()) {
-      newErrors.reviewerEmail = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reviewerEmail.trim())) {
-      newErrors.reviewerEmail = "Please enter a valid email address";
-    }
     if (!cafeName.trim()) newErrors.cafeName = "Café name is required";
     if (!noise) newErrors.noise = "Please select noise level";
     if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
@@ -52,42 +50,115 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to submit a review.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const newReview: Review = {
-      id: `rev-${Date.now()}`,
-      reviewer_name: reviewerName.trim(),
-      reviewer_email: reviewerEmail.trim(),
-      cafe_name: cafeName.trim(),
-      address: address.trim() || "Address not provided",
-      noise: noise as NoiseLevel,
-      wifi: wifi!,
-      outlets: outlets!,
-      laptop_friendly: true,
-      rush_hours: rushHours || "Random",
-      ambience: ambience as Ambience,
-      overall,
-      notes: notes.trim(),
-      image_url: null,
-      created_at: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
 
-    // TODO: replace localStorage with Supabase insert
-    const drafts = localStorage.getItem('cafeCompanionDrafts');
-    const draftsList = drafts ? JSON.parse(drafts) : [];
-    draftsList.push(newReview);
-    localStorage.setItem('cafeCompanionDrafts', JSON.stringify(draftsList));
+    try {
+      // First, find or create the café
+      const { data: existingCafe } = await supabase
+        .from('Cafes Table')
+        .select('id')
+        .eq('name', cafeName.trim())
+        .maybeSingle();
 
-    onSubmit(newReview);
-    resetForm();
+      let cafeId: string;
+
+      if (existingCafe) {
+        cafeId = existingCafe.id;
+      } else {
+        const { data: newCafe, error: cafeError } = await supabase
+          .from('Cafes Table')
+          .insert({
+            name: cafeName.trim(),
+            address: address.trim() || "Address not provided",
+          })
+          .select()
+          .single();
+
+        if (cafeError || !newCafe) {
+          throw cafeError || new Error('Failed to create café');
+        }
+        cafeId = newCafe.id;
+      }
+
+      // Insert the review
+      const { data: newReview, error: reviewError } = await supabase
+        .from('Reviews Table')
+        .insert({
+          user_id: user.id,
+          cafe_id: cafeId,
+          noise_level: noise,
+          wifi: wifi!,
+          outlets: outlets! ? 'Yes' : 'No',
+          rush_hours: rushHours || "Random",
+          ambience: ambience,
+          overall_rating: overall,
+          notes: notes.trim(),
+        })
+        .select()
+        .single();
+
+      if (reviewError || !newReview) {
+        throw reviewError || new Error('Failed to create review');
+      }
+
+      // Get cafe info for display
+      const { data: cafeInfo } = await supabase
+        .from('Cafes Table')
+        .select('name, address')
+        .eq('id', cafeId)
+        .single();
+
+      // Transform to Review type for UI
+      const transformedReview: Review = {
+        id: newReview.id,
+        reviewer_name: user.user_metadata?.name || 'Anonymous',
+        reviewer_email: user.email || '',
+        cafe_name: cafeInfo?.name || cafeName.trim(),
+        address: cafeInfo?.address || address.trim() || "Address not provided",
+        noise: newReview.noise_level as 'quiet' | 'medium' | 'loud',
+        wifi: newReview.wifi,
+        outlets: newReview.outlets === 'Yes',
+        laptop_friendly: true,
+        rush_hours: newReview.rush_hours || 'Random',
+        ambience: newReview.ambience as 'cozy' | 'bright' | 'minimal' | 'busy',
+        overall: newReview.overall_rating,
+        notes: newReview.notes || '',
+        image_url: null,
+        created_at: newReview.created_at,
+      };
+
+      onSubmit(transformedReview);
+      resetForm();
+      toast({
+        title: "Review submitted!",
+        description: "Your review has been added to the feed.",
+      });
+    } catch (error: any) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
-    setReviewerName("");
-    setReviewerEmail("");
     setCafeName("");
     setAddress("");
     setNoise("");
@@ -111,44 +182,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
-          {/* Reviewer Information Section */}
-          <div className="space-y-4 pb-5 border-b border-border">
-            <div className="space-y-1">
-              <h3 className="text-sm font-medium text-foreground">Reviewer Information</h3>
-              <p className="text-xs text-muted-foreground">This helps verify reviews are genuine</p>
-            </div>
-            
-            {/* Name */}
-            <div>
-              <Label htmlFor="reviewerName" className="required">Name *</Label>
-              <Input
-                id="reviewerName"
-                value={reviewerName}
-                onChange={(e) => setReviewerName(e.target.value)}
-                placeholder="Your name"
-                className={errors.reviewerName ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
-              />
-              {errors.reviewerName && <p className="text-xs text-destructive mt-1">{errors.reviewerName}</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <Label htmlFor="reviewerEmail" className="required">Email *</Label>
-              <Input
-                id="reviewerEmail"
-                type="email"
-                value={reviewerEmail}
-                onChange={(e) => setReviewerEmail(e.target.value)}
-                placeholder="Your email"
-                className={errors.reviewerEmail ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Your email will remain anonymous and is only used for verification purposes.
-              </p>
-              {errors.reviewerEmail && <p className="text-xs text-destructive mt-1">{errors.reviewerEmail}</p>}
-            </div>
-          </div>
-
           {/* Café Name */}
           <div>
             <Label htmlFor="cafeName" className="required">Café Name *</Label>
@@ -321,11 +354,11 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1" disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
-              Submit Review
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Review'}
             </Button>
           </div>
         </form>
