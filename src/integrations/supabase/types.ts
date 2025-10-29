@@ -16,22 +16,52 @@ export type Database = {
     Tables: {
       "Cafes Table": {
         Row: {
-          address: string | null
+          address: string
           created_at: string
           id: string
-          name: string | null
+          name: string
         }
         Insert: {
-          address?: string | null
+          address: string
           created_at?: string
           id?: string
-          name?: string | null
+          name: string
         }
         Update: {
-          address?: string | null
+          address?: string
           created_at?: string
           id?: string
-          name?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          username?: string
         }
         Relationships: []
       }
@@ -44,7 +74,9 @@ export type Database = {
           noise_level: string | null
           notes: string | null
           outlets: string | null
-          overall_rating: number | null
+          overall_rating: number
+          reviewer_email: string | null
+          reviewer_name: string | null
           rush_hours: string | null
           user_id: string | null
           wifi: boolean | null
@@ -57,7 +89,9 @@ export type Database = {
           noise_level?: string | null
           notes?: string | null
           outlets?: string | null
-          overall_rating?: number | null
+          overall_rating: number
+          reviewer_email?: string | null
+          reviewer_name?: string | null
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
@@ -70,24 +104,55 @@ export type Database = {
           noise_level?: string | null
           notes?: string | null
           outlets?: string | null
-          overall_rating?: number | null
+          overall_rating?: number
+          reviewer_email?: string | null
+          reviewer_name?: string | null
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
         }
         Relationships: [
           {
-            foreignKeyName: "Reviews Table_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "Users Table"
+            foreignKeyName: "Reviews Table_cafe_id_fkey"
+            columns: ["cafe_id"]
+            isOneToOne: false
+            referencedRelation: "Cafes Table"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_cafes: {
+        Row: {
+          cafe_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          cafe_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          cafe_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_cafes_cafe_id_fkey"
+            columns: ["cafe_id"]
+            isOneToOne: false
+            referencedRelation: "Cafes Table"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Reviews Table_id_fkey1"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "Cafes Table"
+            foreignKeyName: "saved_cafes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -95,21 +160,21 @@ export type Database = {
       "Users Table": {
         Row: {
           created_at: string
-          email: string | null
+          email: string
           id: string
-          name: string | null
+          name: string
         }
         Insert: {
           created_at?: string
-          email?: string | null
+          email: string
           id?: string
-          name?: string | null
+          name: string
         }
         Update: {
           created_at?: string
-          email?: string | null
+          email?: string
           id?: string
-          name?: string | null
+          name?: string
         }
         Relationships: []
       }
