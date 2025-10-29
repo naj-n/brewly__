@@ -10,102 +10,30 @@
  * - Add user authentication for personalized saved lists
  */
 
-import { useState, useEffect } from "react";
-import { Review } from "@/types/review";
+import { useState } from "react";
+import { Review, SavedCafe } from "@/types/review";
+import { seedReviews } from "@/data/seedReviews";
 import { NavBar } from "@/components/NavBar";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewModal } from "@/components/ReviewModal";
 import { SubmitReviewModal } from "@/components/SubmitReviewModal";
+import { Toast } from "@/components/Toast";
+import { SavedPagePlaceholder } from "@/components/SavedPagePlaceholder";
+import { AccountPagePlaceholder } from "@/components/AccountPagePlaceholder";
+import { MyReviewsPage } from "@/components/MyReviewsPage";
 import { Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+
+type Page = 'feed' | 'saved' | 'account' | 'my-reviews';
 
 const Index = () => {
-  const { toast } = useToast();
-  const [reviews, setReviews] = useState<Review[]>(() => {
-    // Load from localStorage on initial mount
-    const cached = localStorage.getItem('cafe-reviews');
-    return cached ? JSON.parse(cached) : [];
-  });
+  const [currentPage, setCurrentPage] = useState<Page>('feed');
+  const [reviews, setReviews] = useState<Review[]>(seedReviews);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch reviews from Supabase on mount and set up real-time subscription
-  useEffect(() => {
-    fetchReviews();
-
-    // Set up real-time subscription for new reviews
-    const channel = supabase
-      .channel('reviews-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'Reviews Table'
-        },
-        (payload) => {
-          console.log('New review added:', payload);
-          // Refetch all reviews to get the complete data with cafe info
-          fetchReviews();
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchReviews = async () => {
-    try {
-      const { data: reviewsData, error } = await supabase
-        .from('Reviews Table')
-        .select(`
-          *,
-          cafe:Cafes Table!inner(name, address)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const transformedReviews: Review[] = (reviewsData || []).map((r: any) => ({
-        id: r.id,
-        reviewer_name: r.reviewer_name || 'Anonymous',
-        reviewer_email: r.reviewer_email || '',
-        cafe_name: r.cafe.name,
-        address: r.cafe.address,
-        noise: r.noise_level as 'quiet' | 'medium' | 'loud',
-        wifi: r.wifi,
-        outlets: r.outlets === 'Yes',
-        laptop_friendly: true,
-        rush_hours: r.rush_hours || 'Random',
-        ambience: r.ambience as 'cozy' | 'bright' | 'minimal' | 'busy',
-        overall: r.overall_rating,
-        notes: r.notes || '',
-        image_url: null,
-        created_at: r.created_at,
-      }));
-
-      setReviews(transformedReviews);
-      // Save to localStorage
-      localStorage.setItem('cafe-reviews', JSON.stringify(transformedReviews));
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      toast({
-        title: "Error loading reviews",
-        description: "Please refresh the page to try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Client-side search filtering
   const filteredReviews = searchQuery.trim()
@@ -124,19 +52,47 @@ const Index = () => {
     setIsReviewModalOpen(true);
   };
 
-  const handleSubmitReview = (newReview: Review) => {
-    // Add to top of feed and refetch to ensure sync
-    setReviews([newReview, ...reviews]);
-    setIsSubmitModalOpen(false);
-    fetchReviews(); // Refetch to get accurate data
+  const handleToggleSave = (review: Review) => {
+    // TODO: replace localStorage with Supabase
+    const savedItems = localStorage.getItem('cafeCompanionSaved');
+    const saved: SavedCafe[] = savedItems ? JSON.parse(savedItems) : [];
+    
+    const existingIndex = saved.findIndex((item) => item.id === review.id);
+    
+    if (existingIndex > -1) {
+      saved.splice(existingIndex, 1);
+      setToastMessage("Removed from saved");
+    } else {
+      saved.push({
+        id: review.id,
+        cafe_name: review.cafe_name,
+        address: review.address,
+        overall: review.overall,
+        notes: review.notes,
+      });
+      setToastMessage("Saved");
+    }
+    
+    localStorage.setItem('cafeCompanionSaved', JSON.stringify(saved));
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Coffee className="w-12 h-12 text-primary animate-pulse" />
-      </div>
-    );
+  const handleSubmitReview = (newReview: Review) => {
+    // Add to top of feed
+    setReviews([newReview, ...reviews]);
+    setIsSubmitModalOpen(false);
+    setToastMessage("Thanks — review added to feed (saved locally)");
+  };
+
+  if (currentPage === 'saved') {
+    return <SavedPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} />;
+  }
+
+  if (currentPage === 'my-reviews') {
+    return <MyReviewsPage onNavigateToFeed={() => setCurrentPage('account')} />;
+  }
+
+  if (currentPage === 'account') {
+    return <AccountPagePlaceholder onNavigateToFeed={() => setCurrentPage('feed')} onNavigateToMyReviews={() => setCurrentPage('my-reviews')} />;
   }
 
   return (
@@ -154,6 +110,8 @@ const Index = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onAddReview={() => setIsSubmitModalOpen(true)}
+        onNavigateToSaved={() => setCurrentPage('saved')}
+        onNavigateToAccount={() => setCurrentPage('account')}
       />
 
       <main className="container mx-auto px-4 py-8 relative z-10">
@@ -176,6 +134,7 @@ const Index = () => {
                   key={review.id}
                   review={review}
                   onCardClick={() => handleCardClick(review)}
+                  onToggleSave={() => handleToggleSave(review)}
                 />
               ))}
             </div>
@@ -202,6 +161,7 @@ const Index = () => {
           setIsReviewModalOpen(false);
           setSelectedReview(null);
         }}
+        onToggleSave={handleToggleSave}
       />
 
       <SubmitReviewModal
@@ -209,6 +169,14 @@ const Index = () => {
         onClose={() => setIsSubmitModalOpen(false)}
         onSubmit={handleSubmitReview}
       />
+
+      {/* Toast */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
     </div>
   );
 };

@@ -16,22 +16,22 @@ export type Database = {
     Tables: {
       "Cafes Table": {
         Row: {
-          address: string
+          address: string | null
           created_at: string
           id: string
-          name: string
+          name: string | null
         }
         Insert: {
-          address: string
+          address?: string | null
           created_at?: string
           id?: string
-          name: string
+          name?: string | null
         }
         Update: {
-          address?: string
+          address?: string | null
           created_at?: string
           id?: string
-          name?: string
+          name?: string | null
         }
         Relationships: []
       }
@@ -44,9 +44,7 @@ export type Database = {
           noise_level: string | null
           notes: string | null
           outlets: string | null
-          overall_rating: number
-          reviewer_email: string | null
-          reviewer_name: string | null
+          overall_rating: number | null
           rush_hours: string | null
           user_id: string | null
           wifi: boolean | null
@@ -59,9 +57,7 @@ export type Database = {
           noise_level?: string | null
           notes?: string | null
           outlets?: string | null
-          overall_rating: number
-          reviewer_email?: string | null
-          reviewer_name?: string | null
+          overall_rating?: number | null
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
@@ -74,18 +70,23 @@ export type Database = {
           noise_level?: string | null
           notes?: string | null
           outlets?: string | null
-          overall_rating?: number
-          reviewer_email?: string | null
-          reviewer_name?: string | null
+          overall_rating?: number | null
           rush_hours?: string | null
           user_id?: string | null
           wifi?: boolean | null
         }
         Relationships: [
           {
-            foreignKeyName: "Reviews Table_cafe_id_fkey"
-            columns: ["cafe_id"]
-            isOneToOne: false
+            foreignKeyName: "Reviews Table_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "Users Table"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Reviews Table_id_fkey1"
+            columns: ["id"]
+            isOneToOne: true
             referencedRelation: "Cafes Table"
             referencedColumns: ["id"]
           },
@@ -94,21 +95,21 @@ export type Database = {
       "Users Table": {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           id: string
-          name: string
+          name: string | null
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           id?: string
-          name: string
+          name?: string | null
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           id?: string
-          name?: string
+          name?: string | null
         }
         Relationships: []
       }

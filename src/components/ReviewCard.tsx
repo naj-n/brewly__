@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 interface ReviewCardProps {
   review: Review;
   onCardClick: () => void;
-  onToggleSave?: () => void;
+  onToggleSave: () => void;
 }
 
 const ambienceIcons: Record<Review['ambience'], typeof Sparkles> = {
@@ -29,10 +29,8 @@ export const ReviewCard = ({ review, onCardClick, onToggleSave }: ReviewCardProp
 
   const handleSaveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onToggleSave) {
-      setIsSaved(!isSaved);
-      onToggleSave();
-    }
+    setIsSaved(!isSaved);
+    onToggleSave();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

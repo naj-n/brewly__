@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Review } from "@/types/review";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,19 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
-import { Volume2, Wifi, Zap, Clock, Sparkles } from "lucide-react";
+import { Volume2, Wifi, Zap, Laptop, Clock, Sparkles } from "lucide-react";
 
-interface SubmitReviewModalProps {
+interface EditReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (review: Review) => void;
+  review: Review;
 }
 
 type NoiseLevel = 'quiet' | 'medium' | 'loud';
 type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
 
-export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewModalProps) => {
+export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditReviewModalProps) => {
   const [reviewerName, setReviewerName] = useState("");
   const [reviewerEmail, setReviewerEmail] = useState("");
   const [cafeName, setCafeName] = useState("");
@@ -26,11 +27,30 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const [noise, setNoise] = useState<NoiseLevel | "">("");
   const [wifi, setWifi] = useState<boolean | null>(null);
   const [outlets, setOutlets] = useState<boolean | null>(null);
+  const [laptopFriendly, setLaptopFriendly] = useState<boolean | null>(null);
   const [rushHours, setRushHours] = useState<RushHours | "">("");
   const [ambience, setAmbience] = useState<Ambience | "">("");
   const [overall, setOverall] = useState(0);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Pre-fill form with existing review data
+  useEffect(() => {
+    if (review) {
+      setReviewerName(review.reviewer_name || "");
+      setReviewerEmail(review.reviewer_email || "");
+      setCafeName(review.cafe_name);
+      setAddress(review.address);
+      setNoise(review.noise);
+      setWifi(review.wifi);
+      setOutlets(review.outlets);
+      setLaptopFriendly(review.laptop_friendly);
+      setRushHours(review.rush_hours as RushHours);
+      setAmbience(review.ambience);
+      setOverall(review.overall);
+      setNotes(review.notes);
+    }
+  }, [review]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -45,6 +65,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     if (!noise) newErrors.noise = "Please select noise level";
     if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
     if (outlets === null) newErrors.outlets = "Please indicate outlet availability";
+    if (laptopFriendly === null) newErrors.laptopFriendly = "Please indicate if laptop-friendly";
     if (!ambience) newErrors.ambience = "Please select ambience";
     if (overall === 0) newErrors.overall = "Please provide a rating";
 
@@ -57,8 +78,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     
     if (!validateForm()) return;
 
-    const newReview: Review = {
-      id: `rev-${Date.now()}`,
+    const updatedReview: Review = {
+      ...review,
       reviewer_name: reviewerName.trim(),
       reviewer_email: reviewerEmail.trim(),
       cafe_name: cafeName.trim(),
@@ -66,47 +87,23 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
       noise: noise as NoiseLevel,
       wifi: wifi!,
       outlets: outlets!,
-      laptop_friendly: true,
+      laptop_friendly: laptopFriendly!,
       rush_hours: rushHours || "Random",
       ambience: ambience as Ambience,
       overall,
       notes: notes.trim(),
-      image_url: null,
-      created_at: new Date().toISOString(),
     };
 
-    // TODO: replace localStorage with Supabase insert
-    const drafts = localStorage.getItem('cafeCompanionDrafts');
-    const draftsList = drafts ? JSON.parse(drafts) : [];
-    draftsList.push(newReview);
-    localStorage.setItem('cafeCompanionDrafts', JSON.stringify(draftsList));
-
-    onSubmit(newReview);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setReviewerName("");
-    setReviewerEmail("");
-    setCafeName("");
-    setAddress("");
-    setNoise("");
-    setWifi(null);
-    setOutlets(null);
-    setRushHours("");
-    setAmbience("");
-    setOverall(0);
-    setNotes("");
-    setErrors({});
+    onSubmit(updatedReview);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl">Add a Review</DialogTitle>
+          <DialogTitle className="font-serif text-2xl">Edit Review</DialogTitle>
           <DialogDescription>
-            Discovered a great spot to focus? Share your thoughts!
+            Update your café review
           </DialogDescription>
         </DialogHeader>
 
@@ -125,8 +122,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
                 id="reviewerName"
                 value={reviewerName}
                 onChange={(e) => setReviewerName(e.target.value)}
-                placeholder="Your name"
-                className={errors.reviewerName ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
+                placeholder="Your name (will be displayed publicly)"
+                className={errors.reviewerName ? "border-destructive" : ""}
               />
               {errors.reviewerName && <p className="text-xs text-destructive mt-1">{errors.reviewerName}</p>}
             </div>
@@ -139,8 +136,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
                 type="email"
                 value={reviewerEmail}
                 onChange={(e) => setReviewerEmail(e.target.value)}
-                placeholder="Your email"
-                className={errors.reviewerEmail ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
+                placeholder="your.email@gmail.com"
+                className={errors.reviewerEmail ? "border-destructive" : ""}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Your email will remain anonymous and is only used for verification purposes.
@@ -157,7 +154,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
               value={cafeName}
               onChange={(e) => setCafeName(e.target.value)}
               placeholder="e.g., Kaffeine Fitzrovia"
-              className={errors.cafeName ? "border-destructive" : ""}
+              className={errors.reviewerName ? "border-destructive" : ""}
             />
             {errors.cafeName && <p className="text-xs text-destructive mt-1">{errors.cafeName}</p>}
           </div>
@@ -198,7 +195,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
           </div>
 
           {/* Toggles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label className="required">Wi-Fi *</Label>
               <div className="flex gap-2 mt-2">
@@ -250,12 +247,38 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
               </div>
               {errors.outlets && <p className="text-xs text-destructive mt-1">{errors.outlets}</p>}
             </div>
+
+            <div>
+              <Label className="required">Laptop OK *</Label>
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setLaptopFriendly(true)}
+                  className={`flex-1 py-2 px-3 rounded-lg border-2 transition-all ${
+                    laptopFriendly === true ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  }`}
+                >
+                  <Laptop size={14} className="inline mr-1" />
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLaptopFriendly(false)}
+                  className={`flex-1 py-2 px-3 rounded-lg border-2 transition-all ${
+                    laptopFriendly === false ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+              {errors.laptopFriendly && <p className="text-xs text-destructive mt-1">{errors.laptopFriendly}</p>}
+            </div>
           </div>
 
           {/* Rush Hours */}
           <div>
             <Label htmlFor="rushHours">Rush Hours</Label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-wrap">
               {(['Early morning', 'Morning', 'Afternoon', 'Evening', 'Night', 'Random'] as RushHours[]).map((time) => (
                 <button
                   key={time}
@@ -325,7 +348,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
               Cancel
             </Button>
             <Button type="submit" className="flex-1">
-              Submit Review
+              Save Changes
             </Button>
           </div>
         </form>
