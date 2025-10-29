@@ -99,28 +99,75 @@ const Index = () => {
     setIsReviewModalOpen(true);
   };
 
-  const handleToggleSave = (review: Review) => {
-    // TODO: replace localStorage with Supabase
-    const savedItems = localStorage.getItem('cafeCompanionSaved');
-    const saved: SavedCafe[] = savedItems ? JSON.parse(savedItems) : [];
-    
-    const existingIndex = saved.findIndex((item) => item.id === review.id);
-    
-    if (existingIndex > -1) {
-      saved.splice(existingIndex, 1);
-      setToastMessage("Removed from saved");
-    } else {
-      saved.push({
-        id: review.id,
-        cafe_name: review.cafe_name,
-        address: review.address,
-        overall: review.overall,
-        notes: review.notes,
+  const handleToggleSave = async (review: Review) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to save cafés",
+        variant: "destructive",
       });
-      setToastMessage("Saved");
+      navigate('/auth');
+      return;
     }
-    
-    localStorage.setItem('cafeCompanionSaved', JSON.stringify(saved));
+
+    try {
+      // Get the cafe_id from the review
+      const { data: cafe, error: cafeError } = await supabase
+        .from('Cafes Table')
+        .select('id')
+        .eq('name', review.cafe_name)
+        .eq('address', review.address)
+        .maybeSingle();
+
+      if (cafeError) throw cafeError;
+      if (!cafe) {
+        toast({
+          title: "Error",
+          description: "Café not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if already saved
+      const { data: existing, error: existingError } = await supabase
+        .from('saved_cafes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('cafe_id', cafe.id)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+
+      if (existing) {
+        // Remove from saved
+        const { error: deleteError } = await supabase
+          .from('saved_cafes')
+          .delete()
+          .eq('id', existing.id);
+        
+        if (deleteError) throw deleteError;
+        setToastMessage("Removed from saved");
+      } else {
+        // Add to saved
+        const { error: insertError } = await supabase
+          .from('saved_cafes')
+          .insert({
+            user_id: user.id,
+            cafe_id: cafe.id,
+          });
+        
+        if (insertError) throw insertError;
+        setToastMessage("Saved");
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save café",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddReview = () => {

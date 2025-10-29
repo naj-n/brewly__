@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { Review } from "@/types/review";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,20 @@ interface EditReviewModalProps {
 type NoiseLevel = 'quiet' | 'medium' | 'loud';
 type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
+
+// Zod schema for validation
+const editReviewSchema = z.object({
+  cafeName: z.string().trim().min(1, "Café name is required").max(200, "Café name must be less than 200 characters"),
+  address: z.string().max(500, "Address must be less than 500 characters").optional(),
+  noise: z.enum(['quiet', 'medium', 'loud'], { errorMap: () => ({ message: "Please select noise level" }) }),
+  wifi: z.boolean({ errorMap: () => ({ message: "Please indicate Wi-Fi availability" }) }),
+  outlets: z.boolean({ errorMap: () => ({ message: "Please indicate outlet availability" }) }),
+  laptopFriendly: z.boolean({ errorMap: () => ({ message: "Please indicate if laptop-friendly" }) }),
+  rushHours: z.string().max(50, "Rush hours must be less than 50 characters").optional(),
+  ambience: z.enum(['cozy', 'bright', 'minimal', 'busy'], { errorMap: () => ({ message: "Please select ambience" }) }),
+  overall: z.number().int().min(1, "Please provide a rating").max(5, "Rating must be between 1 and 5"),
+  notes: z.string().trim().max(2000, "Notes must be less than 2000 characters").optional(),
+});
 
 export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditReviewModalProps) => {
   const [cafeName, setCafeName] = useState("");
@@ -53,18 +68,33 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
   }, [review]);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!cafeName.trim()) newErrors.cafeName = "Café name is required";
-    if (!noise) newErrors.noise = "Please select noise level";
-    if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
-    if (outlets === null) newErrors.outlets = "Please indicate outlet availability";
-    if (laptopFriendly === null) newErrors.laptopFriendly = "Please indicate if laptop-friendly";
-    if (!ambience) newErrors.ambience = "Please select ambience";
-    if (overall === 0) newErrors.overall = "Please provide a rating";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    try {
+      editReviewSchema.parse({
+        cafeName,
+        address: address || undefined,
+        noise: noise || undefined,
+        wifi,
+        outlets,
+        laptopFriendly,
+        rushHours: rushHours || undefined,
+        ambience: ambience || undefined,
+        overall,
+        notes,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
