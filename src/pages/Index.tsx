@@ -30,9 +30,30 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch reviews from Supabase
+  // Fetch reviews from Supabase and set up real-time subscription
   useEffect(() => {
     fetchReviews();
+
+    // Set up real-time subscription for new reviews
+    const channel = supabase
+      .channel('reviews-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'Reviews Table'
+        },
+        () => {
+          // Refetch reviews when any change occurs
+          fetchReviews();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchReviews = async () => {
