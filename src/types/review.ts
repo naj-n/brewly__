@@ -1,7 +1,7 @@
 export interface Review {
   id: string;
-  reviewer_name: string;
-  reviewer_email: string;
+  reviewer_name?: string; // Optional - removed from database
+  reviewer_email?: string; // Optional - removed from database
   cafe_name: string;
   address: string;
   noise: 'quiet' | 'medium' | 'loud';

@@ -20,8 +20,6 @@ type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
 
 export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditReviewModalProps) => {
-  const [reviewerName, setReviewerName] = useState("");
-  const [reviewerEmail, setReviewerEmail] = useState("");
   const [cafeName, setCafeName] = useState("");
   const [address, setAddress] = useState("");
   const [noise, setNoise] = useState<NoiseLevel | "">("");
@@ -37,8 +35,6 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
   // Pre-fill form with existing review data
   useEffect(() => {
     if (review) {
-      setReviewerName(review.reviewer_name || "");
-      setReviewerEmail(review.reviewer_email || "");
       setCafeName(review.cafe_name);
       setAddress(review.address);
       setNoise(review.noise);
@@ -55,12 +51,6 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!reviewerName.trim()) newErrors.reviewerName = "Name is required";
-    if (!reviewerEmail.trim()) {
-      newErrors.reviewerEmail = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reviewerEmail.trim())) {
-      newErrors.reviewerEmail = "Please enter a valid email address";
-    }
     if (!cafeName.trim()) newErrors.cafeName = "Café name is required";
     if (!noise) newErrors.noise = "Please select noise level";
     if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
@@ -80,8 +70,6 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
 
     const updatedReview: Review = {
       ...review,
-      reviewer_name: reviewerName.trim(),
-      reviewer_email: reviewerEmail.trim(),
       cafe_name: cafeName.trim(),
       address: address.trim() || "Address not provided",
       noise: noise as NoiseLevel,
@@ -108,44 +96,6 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
-          {/* Reviewer Information Section */}
-          <div className="space-y-4 pb-5 border-b border-border">
-            <div className="space-y-1">
-              <h3 className="text-sm font-medium text-foreground">Reviewer Information</h3>
-              <p className="text-xs text-muted-foreground">This helps verify reviews are genuine</p>
-            </div>
-            
-            {/* Name */}
-            <div>
-              <Label htmlFor="reviewerName" className="required">Name *</Label>
-              <Input
-                id="reviewerName"
-                value={reviewerName}
-                onChange={(e) => setReviewerName(e.target.value)}
-                placeholder="Your name (will be displayed publicly)"
-                className={errors.reviewerName ? "border-destructive" : ""}
-              />
-              {errors.reviewerName && <p className="text-xs text-destructive mt-1">{errors.reviewerName}</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <Label htmlFor="reviewerEmail" className="required">Email *</Label>
-              <Input
-                id="reviewerEmail"
-                type="email"
-                value={reviewerEmail}
-                onChange={(e) => setReviewerEmail(e.target.value)}
-                placeholder="your.email@gmail.com"
-                className={errors.reviewerEmail ? "border-destructive" : ""}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Your email will remain anonymous and is only used for verification purposes.
-              </p>
-              {errors.reviewerEmail && <p className="text-xs text-destructive mt-1">{errors.reviewerEmail}</p>}
-            </div>
-          </div>
-
           {/* Café Name */}
           <div>
             <Label htmlFor="cafeName" className="required">Café Name *</Label>

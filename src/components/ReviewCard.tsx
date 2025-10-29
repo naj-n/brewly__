@@ -61,11 +61,6 @@ export const ReviewCard = ({ review, onCardClick, onToggleSave }: ReviewCardProp
             {review.cafe_name}
           </h3>
           <p className="text-sm text-muted-foreground">{review.address}</p>
-          {review.reviewer_name && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Reviewed by {review.reviewer_name}
-            </p>
-          )}
         </div>
         
         <button

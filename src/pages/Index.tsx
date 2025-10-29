@@ -55,8 +55,6 @@ const Index = () => {
       // Transform data to match Review type
       const transformedReviews: Review[] = (data || []).map((row: any) => ({
         id: row.id,
-        reviewer_name: row.reviewer_name || 'Anonymous',
-        reviewer_email: row.reviewer_email,
         cafe_name: row.cafe?.name || 'Unknown Café',
         address: row.cafe?.address || 'Address not provided',
         noise: row.noise_level,

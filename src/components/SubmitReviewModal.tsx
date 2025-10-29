@@ -107,8 +107,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
       // Create Review object for parent component
       const reviewObj: Review = {
         id: newReview.id,
-        reviewer_name: 'Anonymous',
-        reviewer_email: user.email || '',
         cafe_name: cafeName.trim(),
         address: address.trim() || "Address not provided",
         noise: noise as NoiseLevel,
