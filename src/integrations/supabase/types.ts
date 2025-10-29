@@ -68,7 +68,7 @@ export type Database = {
       "Reviews Table": {
         Row: {
           ambience: string | null
-          cafe_id: string | null
+          cafe_id: string
           created_at: string
           id: string
           noise_level: string | null
@@ -76,12 +76,12 @@ export type Database = {
           outlets: string | null
           overall_rating: number
           rush_hours: string | null
-          user_id: string | null
+          user_id: string
           wifi: boolean | null
         }
         Insert: {
           ambience?: string | null
-          cafe_id?: string | null
+          cafe_id: string
           created_at?: string
           id?: string
           noise_level?: string | null
@@ -89,12 +89,12 @@ export type Database = {
           outlets?: string | null
           overall_rating: number
           rush_hours?: string | null
-          user_id?: string | null
+          user_id: string
           wifi?: boolean | null
         }
         Update: {
           ambience?: string | null
-          cafe_id?: string | null
+          cafe_id?: string
           created_at?: string
           id?: string
           noise_level?: string | null
@@ -102,12 +102,19 @@ export type Database = {
           outlets?: string | null
           overall_rating?: number
           rush_hours?: string | null
-          user_id?: string | null
+          user_id?: string
           wifi?: boolean | null
         }
         Relationships: [
           {
             foreignKeyName: "Reviews Table_cafe_id_fkey"
+            columns: ["cafe_id"]
+            isOneToOne: false
+            referencedRelation: "Cafes Table"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_cafe_id_fkey"
             columns: ["cafe_id"]
             isOneToOne: false
             referencedRelation: "Cafes Table"
@@ -150,27 +157,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      "Users Table": {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
       }
     }
     Views: {

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
 import { AddressAutocomplete } from "./AddressAutocomplete";
 import { Volume2, Wifi, Zap, Clock, Sparkles } from "lucide-react";
+import { z } from "zod";
 
 interface SubmitReviewModalProps {
   isOpen: boolean;
@@ -21,6 +22,18 @@ interface SubmitReviewModalProps {
 type NoiseLevel = 'quiet' | 'medium' | 'loud';
 type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
+
+const reviewSchema = z.object({
+  cafeName: z.string().trim().min(1, "Café name is required").max(200, "Café name too long"),
+  address: z.string().trim().max(500, "Address too long").optional(),
+  noise: z.enum(['quiet', 'medium', 'loud']),
+  wifi: z.boolean(),
+  outlets: z.boolean(),
+  rushHours: z.string().max(50).optional(),
+  ambience: z.enum(['cozy', 'bright', 'minimal', 'busy']),
+  overall: z.number().int().min(1).max(5),
+  notes: z.string().trim().max(2000, "Notes too long").optional(),
+});
 
 export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewModalProps) => {
   const [cafeName, setCafeName] = useState("");
@@ -38,17 +51,32 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const { user } = useAuth();
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!cafeName.trim()) newErrors.cafeName = "Café name is required";
-    if (!noise) newErrors.noise = "Please select noise level";
-    if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
-    if (outlets === null) newErrors.outlets = "Please indicate outlet availability";
-    if (!ambience) newErrors.ambience = "Please select ambience";
-    if (overall === 0) newErrors.overall = "Please provide a rating";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    try {
+      reviewSchema.parse({
+        cafeName,
+        address,
+        noise,
+        wifi,
+        outlets,
+        rushHours: rushHours || undefined,
+        ambience,
+        overall,
+        notes,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

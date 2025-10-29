@@ -2,6 +2,8 @@ import { Review } from "@/types/review";
 import { StarRating } from "./StarRating";
 import { Heart, Volume2, Wifi, Zap, Laptop, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ReviewCardProps {
   review: Review;
@@ -18,19 +20,56 @@ const ambienceIcons: Record<Review['ambience'], typeof Sparkles> = {
 
 export const ReviewCard = ({ review, onCardClick, onToggleSave }: ReviewCardProps) => {
   const [isSaved, setIsSaved] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const savedItems = localStorage.getItem('cafeCompanionSaved');
-    if (savedItems) {
-      const saved = JSON.parse(savedItems);
-      setIsSaved(saved.some((item: { id: string }) => item.id === review.id));
+    if (user) {
+      checkIfSaved();
     }
-  }, [review.id]);
+  }, [review.id, user]);
 
-  const handleSaveClick = (e: React.MouseEvent) => {
+  const checkIfSaved = async () => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('saved_cafes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('cafe_id', review.id)
+        .maybeSingle();
+
+      setIsSaved(!!data);
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+    }
+  };
+
+  const handleSaveClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsSaved(!isSaved);
-    onToggleSave();
+    if (!user) return;
+
+    try {
+      if (isSaved) {
+        await supabase
+          .from('saved_cafes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('cafe_id', review.id);
+      } else {
+        await supabase
+          .from('saved_cafes')
+          .insert({
+            user_id: user.id,
+            cafe_id: review.id,
+          });
+      }
+
+      setIsSaved(!isSaved);
+      onToggleSave();
+    } catch (error) {
+      console.error('Error toggling save:', error);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

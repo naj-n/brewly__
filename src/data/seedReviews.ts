@@ -4,7 +4,7 @@ export const seedReviews: Review[] = [
   {
     id: "rev-001",
     reviewer_name: "Sarah Johnson",
-    reviewer_email: "sarah.j@gmail.com",
+    reviewer_email: "sarah.johnson@example.com",
     cafe_name: "Kaffeine Fitzrovia",
     address: "66 Great Titchfield St, London",
     noise: "medium",
@@ -21,7 +21,7 @@ export const seedReviews: Review[] = [
   {
     id: "rev-002",
     reviewer_name: "Marcus Chen",
-    reviewer_email: "marcus.chen@gmail.com",
+    reviewer_email: "marcus.chen@example.com",
     cafe_name: "Workshop Coffee",
     address: "27 Clerkenwell Rd, London",
     noise: "quiet",
@@ -38,7 +38,7 @@ export const seedReviews: Review[] = [
   {
     id: "rev-003",
     reviewer_name: "Emily Watson",
-    reviewer_email: "e.watson@gmail.com",
+    reviewer_email: "emily.watson@example.com",
     cafe_name: "Notes Coffee",
     address: "31 St Martin's Ln, London",
     noise: "loud",
@@ -55,7 +55,7 @@ export const seedReviews: Review[] = [
   {
     id: "rev-004",
     reviewer_name: "David Patel",
-    reviewer_email: "dpatel92@gmail.com",
+    reviewer_email: "david.patel@example.com",
     cafe_name: "The Espresso Room",
     address: "31-35 Great Ormond St, London",
     noise: "quiet",
@@ -72,7 +72,7 @@ export const seedReviews: Review[] = [
   {
     id: "rev-005",
     reviewer_name: "Olivia Martinez",
-    reviewer_email: "olivia.m@gmail.com",
+    reviewer_email: "olivia.martinez@example.com",
     cafe_name: "Ozone Coffee Roasters",
     address: "11 Leonard St, London",
     noise: "medium",

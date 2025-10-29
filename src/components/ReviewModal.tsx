@@ -4,6 +4,8 @@ import { X, MapPin, Volume2, Wifi, WifiOff, Zap, ZapOff, Laptop, Clock, Sparkles
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ReviewModalProps {
   review: Review | null;
@@ -27,25 +29,62 @@ const ambienceLabels = {
 
 export const ReviewModal = ({ review, isOpen, onClose, onToggleSave }: ReviewModalProps) => {
   const [isSaved, setIsSaved] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (review) {
-      const savedItems = localStorage.getItem('cafeCompanionSaved');
-      if (savedItems) {
-        const saved = JSON.parse(savedItems);
-        setIsSaved(saved.some((item: { id: string }) => item.id === review.id));
-      }
+    if (review && user) {
+      checkIfSaved();
     }
-  }, [review]);
+  }, [review, user]);
+
+  const checkIfSaved = async () => {
+    if (!review || !user) return;
+
+    try {
+      const { data } = await supabase
+        .from('saved_cafes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('cafe_id', review.id)
+        .maybeSingle();
+
+      setIsSaved(!!data);
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+    }
+  };
 
   if (!review) return null;
 
   const NoiseIcon = noiseIcons[review.noise];
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(review.address)}`;
 
-  const handleSaveClick = () => {
-    setIsSaved(!isSaved);
-    onToggleSave(review);
+  const handleSaveClick = async () => {
+    if (!user || !review) return;
+
+    try {
+      if (isSaved) {
+        // Remove from saved
+        await supabase
+          .from('saved_cafes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('cafe_id', review.id);
+      } else {
+        // Add to saved
+        await supabase
+          .from('saved_cafes')
+          .insert({
+            user_id: user.id,
+            cafe_id: review.id,
+          });
+      }
+
+      setIsSaved(!isSaved);
+      onToggleSave(review);
+    } catch (error) {
+      console.error('Error toggling save:', error);
+    }
   };
 
   return (

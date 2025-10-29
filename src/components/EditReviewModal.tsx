@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
 import { Volume2, Wifi, Zap, Laptop, Clock, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (review: Review) => void;
+  onSubmit: () => void;
   review: Review;
 }
 
@@ -31,6 +33,8 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
   const [overall, setOverall] = useState(0);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Pre-fill form with existing review data
   useEffect(() => {
@@ -63,26 +67,45 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
 
-    const updatedReview: Review = {
-      ...review,
-      cafe_name: cafeName.trim(),
-      address: address.trim() || "Address not provided",
-      noise: noise as NoiseLevel,
-      wifi: wifi!,
-      outlets: outlets!,
-      laptop_friendly: laptopFriendly!,
-      rush_hours: rushHours || "Random",
-      ambience: ambience as Ambience,
-      overall,
-      notes: notes.trim(),
-    };
+    setIsSubmitting(true);
 
-    onSubmit(updatedReview);
+    try {
+      const { error } = await supabase
+        .from('Reviews Table')
+        .update({
+          noise_level: noise,
+          wifi: wifi,
+          outlets: outlets ? 'yes' : 'no',
+          rush_hours: rushHours || "Random",
+          ambience: ambience,
+          overall_rating: overall,
+          notes: notes.trim(),
+        })
+        .eq('id', review.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your review has been updated",
+      });
+
+      onSubmit();
+    } catch (error) {
+      console.error('Error updating review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -294,11 +317,11 @@ export const EditReviewModal = ({ isOpen, onClose, onSubmit, review }: EditRevie
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1" disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
-              Save Changes
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>

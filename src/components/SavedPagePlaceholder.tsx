@@ -3,6 +3,8 @@ import { SavedCafe } from "@/types/review";
 import { StarRating } from "./StarRating";
 import { MapPin, Heart, Coffee, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SavedPagePlaceholderProps {
   onNavigateToFeed?: () => void;
@@ -10,18 +12,81 @@ interface SavedPagePlaceholderProps {
 
 export const SavedPagePlaceholder = ({ onNavigateToFeed }: SavedPagePlaceholderProps) => {
   const [savedCafes, setSavedCafes] = useState<SavedCafe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const saved = localStorage.getItem('cafeCompanionSaved');
-    if (saved) {
-      setSavedCafes(JSON.parse(saved));
+    if (user) {
+      fetchSavedCafes();
     }
-  }, []);
+  }, [user]);
 
-  const handleRemoveSaved = (cafeId: string) => {
-    const updated = savedCafes.filter(cafe => cafe.id !== cafeId);
-    setSavedCafes(updated);
-    localStorage.setItem('cafeCompanionSaved', JSON.stringify(updated));
+  const fetchSavedCafes = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('saved_cafes')
+        .select(`
+          id,
+          cafe:Cafes Table (
+            id,
+            name,
+            address
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Get the reviews for these cafes to get the overall rating
+      const cafeIds = data.map((item: any) => item.cafe.id);
+      const { data: reviews } = await supabase
+        .from('Reviews Table')
+        .select('cafe_id, overall_rating, notes')
+        .in('cafe_id', cafeIds);
+
+      const transformedCafes: SavedCafe[] = data.map((item: any) => {
+        const cafeReviews = reviews?.filter((r: any) => r.cafe_id === item.cafe.id) || [];
+        const avgRating = cafeReviews.length > 0
+          ? cafeReviews.reduce((sum: number, r: any) => sum + r.overall_rating, 0) / cafeReviews.length
+          : 0;
+        const firstNote = cafeReviews[0]?.notes || '';
+
+        return {
+          id: item.cafe.id,
+          cafe_name: item.cafe.name,
+          address: item.cafe.address,
+          overall: Math.round(avgRating),
+          notes: firstNote,
+        };
+      });
+
+      setSavedCafes(transformedCafes);
+    } catch (error) {
+      console.error('Error fetching saved cafes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveSaved = async (cafeId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('saved_cafes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('cafe_id', cafeId);
+
+      if (error) throw error;
+
+      setSavedCafes(savedCafes.filter(cafe => cafe.id !== cafeId));
+    } catch (error) {
+      console.error('Error removing saved cafe:', error);
+    }
   };
 
   return (
@@ -69,7 +134,11 @@ export const SavedPagePlaceholder = ({ onNavigateToFeed }: SavedPagePlaceholderP
           </div>
 
           {/* Content */}
-          {savedCafes.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">Loading your saved cafés...</p>
+            </div>
+          ) : savedCafes.length > 0 ? (
             <div className="space-y-4">
               {savedCafes.map((cafe) => {
                 const truncatedNotes = cafe.notes.length > 120 

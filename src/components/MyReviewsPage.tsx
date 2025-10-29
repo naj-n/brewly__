@@ -4,6 +4,8 @@ import { StarRating } from "./StarRating";
 import { ArrowLeft, Edit, MapPin, Volume2, Wifi, Zap, Laptop, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditReviewModal } from "./EditReviewModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MyReviewsPageProps {
   onNavigateToFeed?: () => void;
@@ -13,21 +15,61 @@ export const MyReviewsPage = ({ onNavigateToFeed }: MyReviewsPageProps) => {
   const [myReviews, setMyReviews] = useState<Review[]>([]);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Load user's reviews from localStorage
-    const drafts = localStorage.getItem('cafeCompanionDrafts');
-    if (drafts) {
-      setMyReviews(JSON.parse(drafts));
+    if (user) {
+      fetchMyReviews();
     }
-  }, []);
+  }, [user]);
 
-  const handleEditReview = (updatedReview: Review) => {
-    const updatedReviews = myReviews.map(review => 
-      review.id === updatedReview.id ? updatedReview : review
-    );
-    setMyReviews(updatedReviews);
-    localStorage.setItem('cafeCompanionDrafts', JSON.stringify(updatedReviews));
+  const fetchMyReviews = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('Reviews Table')
+        .select(`
+          *,
+          cafe:Cafes Table (
+            name,
+            address
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const transformedReviews: Review[] = data.map((row: any) => ({
+        id: row.id,
+        cafe_name: row.cafe?.name || 'Unknown Café',
+        address: row.cafe?.address || 'Address not provided',
+        noise: row.noise_level,
+        wifi: row.wifi,
+        outlets: row.outlets === 'yes',
+        laptop_friendly: true,
+        rush_hours: row.rush_hours || 'Random',
+        ambience: row.ambience,
+        overall: row.overall_rating,
+        notes: row.notes || '',
+        image_url: null,
+        created_at: row.created_at,
+      }));
+
+      setMyReviews(transformedReviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditReview = async () => {
+    // Refresh the list after edit
+    await fetchMyReviews();
     setIsEditModalOpen(false);
     setSelectedReview(null);
   };
@@ -82,7 +124,11 @@ export const MyReviewsPage = ({ onNavigateToFeed }: MyReviewsPageProps) => {
           </div>
 
           {/* Reviews List */}
-          {myReviews.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">Loading your reviews...</p>
+            </div>
+          ) : myReviews.length > 0 ? (
             <div className="space-y-4">
               {myReviews.map((review) => (
                 <div
