@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Review } from "@/types/review";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const [overall, setOverall] = useState(0);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -52,37 +56,96 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
 
-    const newReview: Review = {
-      id: `rev-${Date.now()}`,
-      reviewer_name: reviewerName.trim(),
-      reviewer_email: reviewerEmail.trim(),
-      cafe_name: cafeName.trim(),
-      address: address.trim() || "Address not provided",
-      noise: noise as NoiseLevel,
-      wifi: wifi!,
-      outlets: outlets!,
-      laptop_friendly: true,
-      rush_hours: rushHours || "Random",
-      ambience: ambience as Ambience,
-      overall,
-      notes: notes.trim(),
-      image_url: null,
-      created_at: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
 
-    // TODO: replace localStorage with Supabase insert
-    const drafts = localStorage.getItem('cafeCompanionDrafts');
-    const draftsList = drafts ? JSON.parse(drafts) : [];
-    draftsList.push(newReview);
-    localStorage.setItem('cafeCompanionDrafts', JSON.stringify(draftsList));
+    try {
+      // First, check if café exists or create it
+      let cafeId: string;
+      
+      const { data: existingCafe } = await supabase
+        .from('Cafes Table')
+        .select('id')
+        .eq('name', cafeName.trim())
+        .maybeSingle();
 
-    onSubmit(newReview);
-    resetForm();
+      if (existingCafe) {
+        cafeId = existingCafe.id;
+      } else {
+        // Create new café
+        const { data: newCafe, error: cafeError } = await supabase
+          .from('Cafes Table')
+          .insert({
+            name: cafeName.trim(),
+            address: address.trim() || "Address not provided",
+          })
+          .select('id')
+          .single();
+
+        if (cafeError) throw cafeError;
+        cafeId = newCafe.id;
+      }
+
+      // Insert review
+      const { data: newReview, error: reviewError } = await supabase
+        .from('Reviews Table')
+        .insert({
+          cafe_id: cafeId,
+          reviewer_name: reviewerName.trim(),
+          reviewer_email: reviewerEmail.trim(),
+          noise_level: noise,
+          wifi: wifi,
+          outlets: outlets ? 'yes' : 'no',
+          rush_hours: rushHours || "Random",
+          ambience: ambience,
+          overall_rating: overall,
+          notes: notes.trim(),
+        })
+        .select()
+        .single();
+
+      if (reviewError) throw reviewError;
+
+      // Create Review object for parent component
+      const reviewObj: Review = {
+        id: newReview.id,
+        reviewer_name: reviewerName.trim(),
+        reviewer_email: reviewerEmail.trim(),
+        cafe_name: cafeName.trim(),
+        address: address.trim() || "Address not provided",
+        noise: noise as NoiseLevel,
+        wifi: wifi!,
+        outlets: outlets!,
+        laptop_friendly: true,
+        rush_hours: rushHours || "Random",
+        ambience: ambience as Ambience,
+        overall,
+        notes: notes.trim(),
+        image_url: null,
+        created_at: newReview.created_at,
+      };
+
+      toast({
+        title: "Success!",
+        description: "Your review has been submitted",
+      });
+
+      onSubmit(reviewObj);
+      resetForm();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -321,11 +384,11 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1" disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
-              Submit Review
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Review"}
             </Button>
           </div>
         </form>

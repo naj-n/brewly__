@@ -1,18 +1,7 @@
-/**
- * NEXT STEPS:
- * Run Lovable again to generate the full Saved and Account pages.
- * Prompt title: "Generate full Saved and Account pages for Café Companion"
- * 
- * TODO for future integration:
- * - Replace localStorage with Supabase for persistent storage
- * - Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables
- * - Implement image upload for café photos
- * - Add user authentication for personalized saved lists
- */
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Review, SavedCafe } from "@/types/review";
-import { seedReviews } from "@/data/seedReviews";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { NavBar } from "@/components/NavBar";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewModal } from "@/components/ReviewModal";
@@ -28,12 +17,68 @@ type Page = 'feed' | 'saved' | 'account' | 'my-reviews';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState<Page>('feed');
-  const [reviews, setReviews] = useState<Review[]>(seedReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch reviews from Supabase
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const fetchReviews = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('Reviews Table')
+        .select(`
+          *,
+          cafe:Cafes Table!Reviews Table_cafe_id_fkey (
+            id,
+            name,
+            address
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform data to match Review type
+      const transformedReviews: Review[] = (data || []).map((row: any) => ({
+        id: row.id,
+        reviewer_name: row.reviewer_name || 'Anonymous',
+        reviewer_email: row.reviewer_email,
+        cafe_name: row.cafe?.name || 'Unknown Café',
+        address: row.cafe?.address || 'Address not provided',
+        noise: row.noise_level,
+        wifi: row.wifi,
+        outlets: row.outlets === 'yes' || row.outlets === true,
+        laptop_friendly: true,
+        rush_hours: row.rush_hours,
+        ambience: row.ambience,
+        overall: row.overall_rating,
+        notes: row.notes,
+        image_url: null,
+        created_at: row.created_at,
+      }));
+
+      setReviews(transformedReviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load reviews",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Client-side search filtering
   const filteredReviews = searchQuery.trim()
@@ -76,11 +121,11 @@ const Index = () => {
     localStorage.setItem('cafeCompanionSaved', JSON.stringify(saved));
   };
 
-  const handleSubmitReview = (newReview: Review) => {
-    // Add to top of feed
-    setReviews([newReview, ...reviews]);
+  const handleSubmitReview = async (newReview: Review) => {
     setIsSubmitModalOpen(false);
-    setToastMessage("Thanks — review added to feed (saved locally)");
+    setToastMessage("Submitting review...");
+    await fetchReviews();
+    setToastMessage("Review added successfully!");
   };
 
   if (currentPage === 'saved') {
@@ -127,7 +172,12 @@ const Index = () => {
           </div>
 
           {/* Feed */}
-          {sortedReviews.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-16">
+              <Coffee size={64} className="mx-auto mb-4 text-muted-foreground animate-pulse" />
+              <p className="text-muted-foreground">Loading reviews...</p>
+            </div>
+          ) : sortedReviews.length > 0 ? (
             <div className="space-y-4">
               {sortedReviews.map((review) => (
                 <ReviewCard
