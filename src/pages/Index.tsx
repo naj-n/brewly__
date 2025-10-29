@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Review, SavedCafe } from "@/types/review";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { NavBar } from "@/components/NavBar";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ReviewModal } from "@/components/ReviewModal";
@@ -25,6 +27,8 @@ const Index = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch reviews from Supabase
   useEffect(() => {
@@ -121,6 +125,14 @@ const Index = () => {
     localStorage.setItem('cafeCompanionSaved', JSON.stringify(saved));
   };
 
+  const handleAddReview = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setIsSubmitModalOpen(true);
+  };
+
   const handleSubmitReview = async (newReview: Review) => {
     setIsSubmitModalOpen(false);
     setToastMessage("Submitting review...");
@@ -154,7 +166,7 @@ const Index = () => {
       <NavBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onAddReview={() => setIsSubmitModalOpen(true)}
+        onAddReview={handleAddReview}
         onNavigateToSaved={() => setCurrentPage('saved')}
         onNavigateToAccount={() => setCurrentPage('account')}
       />
@@ -195,7 +207,7 @@ const Index = () => {
               <p className="text-muted-foreground mb-6">
                 Be the first to add a study-friendly café!
               </p>
-              <Button onClick={() => setIsSubmitModalOpen(true)}>
+              <Button onClick={handleAddReview}>
                 Add Review
               </Button>
             </div>

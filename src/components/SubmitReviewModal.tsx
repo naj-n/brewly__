@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Review } from "@/types/review";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "./StarRating";
+import { AddressAutocomplete } from "./AddressAutocomplete";
 import { Volume2, Wifi, Zap, Clock, Sparkles } from "lucide-react";
 
 interface SubmitReviewModalProps {
@@ -21,8 +23,6 @@ type Ambience = 'cozy' | 'bright' | 'minimal' | 'busy';
 type RushHours = 'Early morning' | 'Morning' | 'Afternoon' | 'Evening' | 'Night' | 'Random';
 
 export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewModalProps) => {
-  const [reviewerName, setReviewerName] = useState("");
-  const [reviewerEmail, setReviewerEmail] = useState("");
   const [cafeName, setCafeName] = useState("");
   const [address, setAddress] = useState("");
   const [noise, setNoise] = useState<NoiseLevel | "">("");
@@ -35,16 +35,11 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!reviewerName.trim()) newErrors.reviewerName = "Name is required";
-    if (!reviewerEmail.trim()) {
-      newErrors.reviewerEmail = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reviewerEmail.trim())) {
-      newErrors.reviewerEmail = "Please enter a valid email address";
-    }
     if (!cafeName.trim()) newErrors.cafeName = "Café name is required";
     if (!noise) newErrors.noise = "Please select noise level";
     if (wifi === null) newErrors.wifi = "Please indicate Wi-Fi availability";
@@ -59,7 +54,7 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm() || !user) return;
 
     setIsSubmitting(true);
 
@@ -90,13 +85,12 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
         cafeId = newCafe.id;
       }
 
-      // Insert review
+      // Insert review with user_id
       const { data: newReview, error: reviewError } = await supabase
         .from('Reviews Table')
         .insert({
           cafe_id: cafeId,
-          reviewer_name: reviewerName.trim(),
-          reviewer_email: reviewerEmail.trim(),
+          user_id: user.id,
           noise_level: noise,
           wifi: wifi,
           outlets: outlets ? 'yes' : 'no',
@@ -113,8 +107,8 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
       // Create Review object for parent component
       const reviewObj: Review = {
         id: newReview.id,
-        reviewer_name: reviewerName.trim(),
-        reviewer_email: reviewerEmail.trim(),
+        reviewer_name: 'Anonymous',
+        reviewer_email: user.email || '',
         cafe_name: cafeName.trim(),
         address: address.trim() || "Address not provided",
         noise: noise as NoiseLevel,
@@ -149,8 +143,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
   };
 
   const resetForm = () => {
-    setReviewerName("");
-    setReviewerEmail("");
     setCafeName("");
     setAddress("");
     setNoise("");
@@ -174,44 +166,6 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
-          {/* Reviewer Information Section */}
-          <div className="space-y-4 pb-5 border-b border-border">
-            <div className="space-y-1">
-              <h3 className="text-sm font-medium text-foreground">Reviewer Information</h3>
-              <p className="text-xs text-muted-foreground">This helps verify reviews are genuine</p>
-            </div>
-            
-            {/* Name */}
-            <div>
-              <Label htmlFor="reviewerName" className="required">Name *</Label>
-              <Input
-                id="reviewerName"
-                value={reviewerName}
-                onChange={(e) => setReviewerName(e.target.value)}
-                placeholder="Your name"
-                className={errors.reviewerName ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
-              />
-              {errors.reviewerName && <p className="text-xs text-destructive mt-1">{errors.reviewerName}</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <Label htmlFor="reviewerEmail" className="required">Email *</Label>
-              <Input
-                id="reviewerEmail"
-                type="email"
-                value={reviewerEmail}
-                onChange={(e) => setReviewerEmail(e.target.value)}
-                placeholder="Your email"
-                className={errors.reviewerEmail ? "border-destructive italic placeholder:italic" : "italic placeholder:italic"}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Your email will remain anonymous and is only used for verification purposes.
-              </p>
-              {errors.reviewerEmail && <p className="text-xs text-destructive mt-1">{errors.reviewerEmail}</p>}
-            </div>
-          </div>
-
           {/* Café Name */}
           <div>
             <Label htmlFor="cafeName" className="required">Café Name *</Label>
@@ -225,17 +179,12 @@ export const SubmitReviewModal = ({ isOpen, onClose, onSubmit }: SubmitReviewMod
             {errors.cafeName && <p className="text-xs text-destructive mt-1">{errors.cafeName}</p>}
           </div>
 
-          {/* Address */}
-          <div>
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter address or landmark"
-            />
-            <p className="text-xs text-muted-foreground mt-1">Used to open Google Maps</p>
-          </div>
+          {/* Address with Google Maps Autocomplete */}
+          <AddressAutocomplete
+            value={address}
+            onChange={setAddress}
+            error={errors.address}
+          />
 
           {/* Noise Level */}
           <div>
